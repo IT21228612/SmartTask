@@ -1,0 +1,7 @@
+<resources>
+    <string-array name="task_priority_options">
+        <item>@string/task_priority_low</item>
+        <item>@string/task_priority_medium</item>
+        <item>@string/task_priority_high</item>
+    </string-array>
+</resources>
