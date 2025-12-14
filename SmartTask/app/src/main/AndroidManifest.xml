@@ -12,6 +12,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartTask"
         tools:targetApi="31">
+        <activity android:name=".taskinput.ui.TaskCreateActivity" />
+        <activity android:name=".taskinput.ui.TaskListActivity" />
         <activity
             android:name=".taskinput.ui.MainActivity"
             android:exported="true">
