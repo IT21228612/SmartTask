@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">SmartTask</string>
+    <string name="task_title_label">Task title</string>
+    <string name="task_description_label">Description</string>
+    <string name="task_due_date_label">Due date</string>
+    <string name="task_due_date_format_hint">Use yyyy-MM-dd HH:mm (24h)</string>
+    <string name="task_location_label">Location</string>
+    <string name="task_priority_label">Priority</string>
+    <string name="save_task">Save task</string>
+    <string name="add_task">Add task</string>
+    <string name="task_empty_state">No tasks yet. Tap + to create one.</string>
+    <string name="task_saved">Task saved</string>
+    <string name="task_title_required">Please add a title</string>
+    <string name="task_deleted">%1$s deleted</string>
 </resources>
