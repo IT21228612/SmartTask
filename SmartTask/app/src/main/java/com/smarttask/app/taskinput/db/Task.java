@@ -1,34 +1,29 @@
 package com.smarttask.app.taskinput.db;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Objects;
+import androidx.annotation.Nullable;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-// taskinput/db/Task.java
-
+@Entity(tableName = "tasks")
 public class Task {
+
+    @PrimaryKey(autoGenerate = true)
     private long id;
     private String title;
+    @Nullable
     private String description;
-    private long dueDate;
-    private String location;
+    private long createdAt;
+    @Nullable
+    private Long dueAt;
     private int priority;
+    @Nullable
+    private Double locationLat;
+    @Nullable
+    private Double locationLng;
+    @Nullable
+    private Float locationRadius;
 
     public Task() {
-    }
-
-    public Task(long id, String title, String description, long dueDate, String location, int priority) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.dueDate = dueDate;
-        this.location = location;
-        this.priority = priority;
-    }
-
-    public Task(Task other) {
-        this(other.id, other.title, other.description, other.dueDate, other.location, other.priority);
     }
 
     public long getId() {
@@ -47,28 +42,30 @@ public class Task {
         this.title = title;
     }
 
+    @Nullable
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(@Nullable String description) {
         this.description = description;
     }
 
-    public long getDueDate() {
-        return dueDate;
+    public long getCreatedAt() {
+        return createdAt;
     }
 
-    public void setDueDate(long dueDate) {
-        this.dueDate = dueDate;
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public String getLocation() {
-        return location;
+    @Nullable
+    public Long getDueAt() {
+        return dueAt;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setDueAt(@Nullable Long dueAt) {
+        this.dueAt = dueAt;
     }
 
     public int getPriority() {
@@ -79,33 +76,30 @@ public class Task {
         this.priority = priority;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder(title == null ? "" : title);
-        if (dueDate > 0) {
-            SimpleDateFormat formatter = new SimpleDateFormat("MMM d, HH:mm", Locale.getDefault());
-            builder.append(" · due ").append(formatter.format(new Date(dueDate)));
-        }
-        if (priority != 0) {
-            builder.append(" · priority ").append(priority);
-        }
-        return builder.toString();
+    @Nullable
+    public Double getLocationLat() {
+        return locationLat;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof Task)) {
-            return false;
-        }
-        Task task = (Task) o;
-        return id == task.id;
+    public void setLocationLat(@Nullable Double locationLat) {
+        this.locationLat = locationLat;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    @Nullable
+    public Double getLocationLng() {
+        return locationLng;
+    }
+
+    public void setLocationLng(@Nullable Double locationLng) {
+        this.locationLng = locationLng;
+    }
+
+    @Nullable
+    public Float getLocationRadius() {
+        return locationRadius;
+    }
+
+    public void setLocationRadius(@Nullable Float locationRadius) {
+        this.locationRadius = locationRadius;
     }
 }

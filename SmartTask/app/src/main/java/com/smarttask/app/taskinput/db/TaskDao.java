@@ -1,21 +1,31 @@
 package com.smarttask.app.taskinput.db;
 
+import androidx.room.Dao;
+import androidx.room.Delete;
+import androidx.room.Insert;
+import androidx.room.Query;
+import androidx.room.Update;
+
 import java.util.List;
 
-// taskinput/db/TaskDao.java
-
+@Dao
 public interface TaskDao {
-    Task insert(Task task);
 
-    void update(Task task);
+    @Insert
+    long insertTask(Task task);
 
-    void delete(long taskId);
+    @Update
+    void updateTask(Task task);
 
-    List<Task> getTasks();
+    @Delete
+    void deleteTask(Task task);
 
+    @Query("SELECT * FROM tasks ORDER BY createdAt DESC")
+    List<Task> getAllTasks();
+
+    @Query("SELECT * FROM tasks ORDER BY CASE WHEN dueAt IS NULL THEN 1 ELSE 0 END, dueAt ASC")
+    List<Task> getPendingTasks();
+
+    @Query("SELECT * FROM tasks WHERE id = :taskId LIMIT 1")
     Task getTaskById(long taskId);
-
-    static TaskDao inMemory() {
-        return InMemoryTaskDao.getInstance();
-    }
 }
