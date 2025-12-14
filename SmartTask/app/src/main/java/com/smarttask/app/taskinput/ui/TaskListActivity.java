@@ -44,6 +44,7 @@ public class TaskListActivity extends AppCompatActivity {
 
         taskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, new ArrayList<>());
         taskList.setAdapter(taskAdapter);
+        taskList.setEmptyView(findViewById(R.id.empty_view));
 
         taskList.setOnItemClickListener((parent, view, position, id) -> {
             Task selected = taskAdapter.getItem(position);

@@ -23,7 +23,6 @@
         android:layout_height="0dp"
         android:divider="@android:color/darker_gray"
         android:dividerHeight="1dp"
-        android:emptyView="@id/empty_view"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,6 +36,6 @@
         android:src="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_margin="16dp" />
+        android:layout_margin="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
