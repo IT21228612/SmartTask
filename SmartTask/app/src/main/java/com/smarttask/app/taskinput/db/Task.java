@@ -1,8 +1,8 @@
 package com.smarttask.app.taskinput.db;
 
 import androidx.annotation.Nullable;
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+import androidx.room.*;
+
 
 @Entity(tableName = "tasks")
 public class Task {

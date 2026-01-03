@@ -1,4 +1,5 @@
 package com.smarttask.app.taskinput.db;
+import androidx.room.*;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
