@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
 }
@@ -7,6 +10,10 @@ android {
     namespace = "com.smarttask.app"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true // ✅ enable custom BuildConfig fields
+    }
+
     defaultConfig {
         applicationId = "com.smarttask.app"
         minSdk = 26
@@ -15,6 +22,17 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
+        // ✅ Kotlin DSL version to load secrets.properties
+        val secretsPropsFile = rootProject.file("app/secrets.properties")
+        if (secretsPropsFile.exists()) {
+            val secretsProps = Properties()
+            FileInputStream(secretsPropsFile).use { secretsProps.load(it) }
+            buildConfigField("String", "GOOGLE_MAPS_API_KEY", secretsProps.getProperty("GOOGLE_MAPS_API_KEY"))
+        } else {
+            buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"YOUR_API_KEY_HERE\"")
+        }
     }
 
     buildTypes {
