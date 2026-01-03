@@ -160,7 +160,6 @@ public class TaskCreateActivity extends AppCompatActivity {
         int priority = prioritySpinner.getSelectedItemPosition();
 
         Task task = new Task();
-        task.setId(editingTaskId);
         task.setTitle(title);
         task.setDescription(description);
         task.setCreatedAt(createdAt);
@@ -170,11 +169,12 @@ public class TaskCreateActivity extends AppCompatActivity {
         task.setLocationLng(null);
         task.setLocationRadius(null);
 
-        if (editingTaskId == -1L) {
+        if (editingTaskId != -1L) {
+            task.setId(editingTaskId);
+            taskDao.updateTask(task);
+        } else {
             long newId = taskDao.insertTask(task);
             task.setId(newId);
-        } else {
-            taskDao.updateTask(task);
         }
 
         Toast.makeText(this, R.string.task_saved, Toast.LENGTH_SHORT).show();
