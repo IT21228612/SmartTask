@@ -37,6 +37,7 @@ import com.smarttask.app.util.AppConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -272,23 +273,21 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         searchProgress.setVisibility(android.view.View.VISIBLE);
         new Thread(() -> {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-            List<Address> results = new ArrayList<>();
+            List<Address> results;
             try {
-                results = geocoder.getFromLocationName(query, 5);
+                List<Address> geocoderResults = geocoder.getFromLocationName(query, 5);
+                results = geocoderResults != null ? geocoderResults : Collections.emptyList();
             } catch (IOException ignored) {
+                results = Collections.emptyList();
             }
             List<String> displayTexts = new ArrayList<>();
-            if (results != null) {
-                for (Address address : results) {
-                    displayTexts.add(formatAddress(address));
-                }
+            for (Address address : results) {
+                displayTexts.add(formatAddress(address));
             }
             mainHandler.post(() -> {
                 searchProgress.setVisibility(android.view.View.GONE);
                 lastResults.clear();
-                if (results != null) {
-                    lastResults.addAll(results);
-                }
+                lastResults.addAll(results);
                 resultsAdapter.clear();
                 if (displayTexts.isEmpty()) {
                     resultsAdapter.add(getString(R.string.task_location_search_no_results));
