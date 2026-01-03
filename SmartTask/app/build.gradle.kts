@@ -26,13 +26,16 @@ android {
 
         // ✅ Kotlin DSL version to load secrets.properties
         val secretsPropsFile = rootProject.file("app/secrets.properties")
-        if (secretsPropsFile.exists()) {
+        val mapsApiKey = if (secretsPropsFile.exists()) {
             val secretsProps = Properties()
             FileInputStream(secretsPropsFile).use { secretsProps.load(it) }
-            buildConfigField("String", "GOOGLE_MAPS_API_KEY", secretsProps.getProperty("GOOGLE_MAPS_API_KEY"))
+            secretsProps.getProperty("GOOGLE_MAPS_API_KEY")
         } else {
-            buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"YOUR_API_KEY_HERE\"")
+            "YOUR_API_KEY_HERE"
         }
+
+        // Pass the key to the manifest
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
