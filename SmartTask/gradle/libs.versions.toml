@@ -10,6 +10,8 @@ constraintlayout = "2.1.4"
 room = "2.8.4"
 cardview = "1.0.0"
 roomCommonJvm = "2.8.4"
+playServicesMaps = "18.2.0"
+playServicesLocation = "21.0.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -23,7 +25,8 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-
