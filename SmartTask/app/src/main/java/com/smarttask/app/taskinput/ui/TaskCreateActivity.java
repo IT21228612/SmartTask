@@ -3,6 +3,7 @@ package com.smarttask.app.taskinput.ui;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.ArrayAdapter;
@@ -12,6 +13,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -36,6 +39,12 @@ public class TaskCreateActivity extends AppCompatActivity {
     private Long selectedDueDate;
     private long editingTaskId = -1L;
     private long createdAt = -1L;
+    @Nullable
+    private Double selectedLat;
+    @Nullable
+    private Double selectedLng;
+    @Nullable
+    private String selectedAddress;
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault());
 
@@ -50,6 +59,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         descriptionInput = findViewById(R.id.task_description_input);
         dueDateDisplay = findViewById(R.id.task_due_date_display);
         prioritySpinner = findViewById(R.id.task_priority_spinner);
+        TextView locationDisplay = findViewById(R.id.task_location_display);
         Button dueDateButton = findViewById(R.id.task_due_date_button);
         Button clearDueDateButton = findViewById(R.id.task_clear_due_date_button);
         Button locationButton = findViewById(R.id.task_location_button);
@@ -69,16 +79,17 @@ public class TaskCreateActivity extends AppCompatActivity {
             selectedDueDate = null;
             updateDueDateDisplay();
         });
-        locationButton.setOnClickListener(v ->
-                Toast.makeText(this, R.string.task_location_placeholder_toast, Toast.LENGTH_SHORT).show());
+        locationButton.setOnClickListener(v -> openLocationPicker());
         saveButton.setOnClickListener(v -> saveTask());
         cancelButton.setOnClickListener(v -> finish());
 
         long taskId = getIntent().getLongExtra(EXTRA_TASK_ID, -1L);
         if (taskId != -1L) {
             loadTask(taskId);
+            locationButton.setText(R.string.task_update_location);
         } else {
             createdAt = System.currentTimeMillis();
+            updateLocationDisplay(locationDisplay);
         }
     }
 
@@ -96,6 +107,10 @@ public class TaskCreateActivity extends AppCompatActivity {
         selectedDueDate = task.getDueAt();
         updateDueDateDisplay();
         prioritySpinner.setSelection(Math.max(0, Math.min(task.getPriority(), 2)));
+        selectedLat = task.getLocationLat();
+        selectedLng = task.getLocationLng();
+        selectedAddress = null;
+        updateLocationDisplay(findViewById(R.id.task_location_display));
     }
 
     private void openDueDatePicker() {
@@ -165,8 +180,8 @@ public class TaskCreateActivity extends AppCompatActivity {
         task.setCreatedAt(createdAt);
         task.setDueAt(selectedDueDate);
         task.setPriority(priority);
-        task.setLocationLat(null);
-        task.setLocationLng(null);
+        task.setLocationLat(selectedLat);
+        task.setLocationLng(selectedLng);
         task.setLocationRadius(null);
 
         if (editingTaskId != -1L) {
@@ -181,4 +196,44 @@ public class TaskCreateActivity extends AppCompatActivity {
         setResult(Activity.RESULT_OK);
         finish();
     }
+
+    private void openLocationPicker() {
+        Intent intent = new Intent(this, MapPickerActivity.class);
+        if (selectedLat != null && selectedLng != null) {
+            intent.putExtra(MapPickerActivity.EXTRA_INITIAL_LAT, selectedLat);
+            intent.putExtra(MapPickerActivity.EXTRA_INITIAL_LNG, selectedLng);
+            if (!TextUtils.isEmpty(selectedAddress)) {
+                intent.putExtra(MapPickerActivity.EXTRA_INITIAL_ADDRESS, selectedAddress);
+            }
+        }
+        mapPickerLauncher.launch(intent);
+    }
+
+    private void updateLocationDisplay(TextView locationDisplay) {
+        if (selectedLat != null && selectedLng != null) {
+            String addressText = selectedAddress;
+            if (TextUtils.isEmpty(addressText)) {
+                addressText = getString(R.string.task_location_coordinates, selectedLat, selectedLng);
+            }
+            locationDisplay.setText(getString(R.string.task_location_selected, addressText));
+        } else {
+            locationDisplay.setText(R.string.task_location_not_set);
+        }
+    }
+
+    private final ActivityResultLauncher<Intent> mapPickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Intent data = result.getData();
+                    double lat = data.getDoubleExtra(MapPickerActivity.EXTRA_SELECTED_LAT, Double.NaN);
+                    double lng = data.getDoubleExtra(MapPickerActivity.EXTRA_SELECTED_LNG, Double.NaN);
+                    if (!Double.isNaN(lat) && !Double.isNaN(lng)) {
+                        selectedLat = lat;
+                        selectedLng = lng;
+                        selectedAddress = data.getStringExtra(MapPickerActivity.EXTRA_SELECTED_ADDRESS);
+                        updateLocationDisplay(findViewById(R.id.task_location_display));
+                        Toast.makeText(this, R.string.task_location_saved, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
 }

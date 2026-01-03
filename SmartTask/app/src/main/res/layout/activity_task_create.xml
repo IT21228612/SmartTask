@@ -88,6 +88,14 @@
             android:text="@string/task_add_location"
             android:textAllCaps="false" />
 
+        <TextView
+            android:id="@+id/task_location_display"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/task_location_not_set"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
