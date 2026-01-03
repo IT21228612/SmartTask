@@ -1,4 +1,6 @@
 package com.smarttask.app.taskinput.ui;
+import com.smarttask.app.BuildConfig;
+
 
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -8,11 +10,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +22,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
@@ -62,7 +65,7 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
     private SearchView searchView;
 
     private ArrayAdapter<String> resultsAdapter;
-    private final List<Address> lastResults = new ArrayList<>();
+    private List<Address> lastResults = new ArrayList<>();
     private FusedLocationProviderClient fusedLocationProviderClient;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -82,6 +85,8 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_picker);
+
+        //android.util.Log.d("MapPickerActivity", "GOOGLE_MAPS_API_KEY = " + BuildConfig.GOOGLE_MAPS_API_KEY);
 
         Toolbar toolbar = findViewById(R.id.map_toolbar);
         toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material);
@@ -153,10 +158,23 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
 
     @Override
     public void onMapReady(GoogleMap map) {
+
+        // ✅ Log and Toast to check if map is initialized
+        android.util.Log.d("MapPickerActivity", "onMapReady called – map should display now");
+        Toast.makeText(this, "Map is ready – check logcat", Toast.LENGTH_SHORT).show();
+
         googleMap = map;
         googleMap.getUiSettings().setZoomControlsEnabled(true);
         googleMap.getUiSettings().setMapToolbarEnabled(false);
         googleMap.setOnMapClickListener(latLng -> updateSelection(latLng, null));
+
+        // Log that the map object is ready
+        Log.d("MapPickerActivity", "Google Map object is ready.");
+
+        // ✅ Add this to know when map tiles have actually loaded
+        googleMap.setOnMapLoadedCallback(() -> {
+            Log.d("MapPickerActivity", "Map finished loading!");
+        });
 
         if (selectedLatLng != null) {
             moveCamera(selectedLatLng, 15f);
@@ -271,6 +289,7 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
             return;
         }
         searchProgress.setVisibility(android.view.View.VISIBLE);
+
         new Thread(() -> {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
             List<Address> results;
@@ -280,14 +299,19 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
             } catch (IOException ignored) {
                 results = Collections.emptyList();
             }
+
             List<String> displayTexts = new ArrayList<>();
             for (Address address : results) {
                 displayTexts.add(formatAddress(address));
             }
+
+            // Copy to a final variable so the lambda can capture it
+            final List<Address> resultsFinal = results;
+
             mainHandler.post(() -> {
                 searchProgress.setVisibility(android.view.View.GONE);
                 lastResults.clear();
-                lastResults.addAll(results);
+                lastResults.addAll(resultsFinal);
                 resultsAdapter.clear();
                 if (displayTexts.isEmpty()) {
                     resultsAdapter.add(getString(R.string.task_location_search_no_results));
@@ -307,6 +331,8 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
             });
         }).start();
     }
+
+
 
     private String formatAddress(Address address) {
         List<String> parts = new ArrayList<>();
