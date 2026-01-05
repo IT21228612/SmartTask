@@ -70,6 +70,7 @@ dependencies {
 
     implementation(libs.work.runtime)
     implementation(libs.lifecycle.process)
+    implementation(libs.lifecycle.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
