@@ -2,6 +2,8 @@ package com.smarttask.app.taskinput.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -10,11 +12,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.smarttask.app.R;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
@@ -43,6 +47,10 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         RecyclerView recyclerView = findViewById(R.id.task_recycler_view);
         emptyView = findViewById(R.id.empty_view);
         FloatingActionButton fab = findViewById(R.id.add_task_button);
+        MaterialToolbar toolbar = findViewById(R.id.task_list_toolbar);
+
+        toolbar.setNavigationOnClickListener(this::showTopMenu);
+        toolbar.setOnMenuItemClickListener(this::handleToolbarItem);
 
         adapter = new TaskAdapter(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -117,5 +125,25 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> adapter.notifyItemChanged(position))
                 .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
                 .show();
+    }
+
+    private void showTopMenu(View anchor) {
+        PopupMenu popupMenu = new PopupMenu(this, anchor, Gravity.START | Gravity.TOP);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_task_list_nav, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.menu_item_debug) {
+                startActivity(new Intent(this, DebugActivity.class));
+                return true;
+            }
+            return true;
+        });
+        popupMenu.show();
+    }
+
+    private boolean handleToolbarItem(MenuItem item) {
+        if (item.getItemId() == R.id.action_user) {
+            return true;
+        }
+        return false;
     }
 }
