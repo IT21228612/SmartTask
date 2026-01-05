@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
@@ -22,12 +23,19 @@ import java.util.concurrent.TimeUnit;
 
 public class LocationCollector implements ContextCollector {
 
+    private static final String TAG = "contextCollector";
+
     private static final long STALE_THRESHOLD_MS = TimeUnit.MINUTES.toMillis(2);
 
     @Override
     public void collect(ContextSnapshot snapshot, CollectorContext ctx) {
         if (!PermissionUtils.hasLocationPermission(ctx.appContext)) {
             snapshot.dataQualityFlags |= DataQualityFlags.NO_LOCATION;
+            Log.d(TAG, "cannot get lat | reason : location permission denied");
+            Log.d(TAG, "cannot get lng | reason : location permission denied");
+            Log.d(TAG, "cannot get accuracyM | reason : location permission denied");
+            Log.d(TAG, "cannot get speedMps | reason : location permission denied");
+            Log.d(TAG, "cannot get bearingDeg | reason : location permission denied");
             return;
         }
         FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(ctx.appContext);
@@ -55,6 +63,11 @@ public class LocationCollector implements ContextCollector {
         } else {
             snapshot.dataQualityFlags |= DataQualityFlags.NO_LOCATION;
             snapshot.locationSource = "UNKNOWN";
+            Log.d(TAG, "cannot get lat | reason : fused location unavailable");
+            Log.d(TAG, "cannot get lng | reason : fused location unavailable");
+            Log.d(TAG, "cannot get accuracyM | reason : fused location unavailable");
+            Log.d(TAG, "cannot get speedMps | reason : fused location unavailable");
+            Log.d(TAG, "cannot get bearingDeg | reason : fused location unavailable");
         }
     }
 
@@ -62,7 +75,8 @@ public class LocationCollector implements ContextCollector {
     private Location getLastKnownLocation(FusedLocationProviderClient client) {
         try {
             return Tasks.await(client.getLastLocation(), 2, TimeUnit.SECONDS);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.d(TAG, "cannot get lat | reason : getLastLocation failed " + e.getMessage());
             return null;
         }
     }
@@ -74,7 +88,8 @@ public class LocationCollector implements ContextCollector {
                     .setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
                     .setInterval(0);
             return Tasks.await(client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null), 3, TimeUnit.SECONDS);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.d(TAG, "cannot get lat | reason : getCurrentLocation failed " + e.getMessage());
             return null;
         }
     }

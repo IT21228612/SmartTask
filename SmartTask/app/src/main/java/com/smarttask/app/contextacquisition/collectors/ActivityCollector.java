@@ -2,6 +2,8 @@ package com.smarttask.app.contextacquisition.collectors;
 
 import android.content.Context;
 
+import android.util.Log;
+
 import com.smarttask.app.contextacquisition.activity.ActivityStore;
 import com.smarttask.app.contextacquisition.db.ContextSnapshot;
 import com.smarttask.app.contextacquisition.utils.PermissionUtils;
@@ -9,10 +11,15 @@ import com.smarttask.app.contextacquisition.utils.PermissionUtils;
 import java.util.Locale;
 
 public class ActivityCollector implements ContextCollector {
+
+    private static final String TAG = "contextCollector";
     @Override
     public void collect(ContextSnapshot snapshot, CollectorContext ctx) {
         if (!PermissionUtils.hasActivityRecognition(ctx.appContext)) {
             snapshot.permissionState = appendState(snapshot.permissionState, "ACTIVITY_DENIED");
+            Log.d(TAG, "cannot get activityType | reason : activity recognition permission denied");
+            Log.d(TAG, "cannot get activityConfidence | reason : activity recognition permission denied");
+            Log.d(TAG, "cannot get isMoving | reason : activity recognition permission denied");
             return;
         }
         ActivityStore.ActivityState state = ActivityStore.getInstance(ctx.appContext).getLastActivity();
@@ -22,6 +29,9 @@ public class ActivityCollector implements ContextCollector {
             snapshot.isMoving = isMoving(state.type, snapshot.speedMps);
         } else {
             snapshot.activityType = "UNKNOWN";
+            Log.d(TAG, "cannot get activityType | reason : no last activity state");
+            Log.d(TAG, "cannot get activityConfidence | reason : no last activity state");
+            Log.d(TAG, "cannot get isMoving | reason : no last activity state");
         }
     }
 

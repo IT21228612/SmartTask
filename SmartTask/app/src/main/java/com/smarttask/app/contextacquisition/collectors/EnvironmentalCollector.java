@@ -10,6 +10,7 @@ import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresPermission;
 import androidx.core.content.ContextCompat;
@@ -19,6 +20,8 @@ import com.smarttask.app.contextacquisition.utils.HashUtils;
 import com.smarttask.app.contextacquisition.utils.PrivacySettings;
 
 public class EnvironmentalCollector implements ContextCollector {
+
+    private static final String TAG = "contextCollector";
     @Override
     public void collect(ContextSnapshot snapshot, CollectorContext ctx) {
         Context app = ctx.appContext;
@@ -26,6 +29,9 @@ public class EnvironmentalCollector implements ContextCollector {
         if (audioManager != null) {
             snapshot.headphonesConnected = hasHeadphones(audioManager);
             snapshot.bluetoothConnected = hasBluetoothAudio(audioManager);
+        } else {
+            Log.d(TAG, "cannot get headphonesConnected | reason : audio manager unavailable");
+            Log.d(TAG, "cannot get bluetoothConnected | reason : audio manager unavailable");
         }
         collectWifiInfo(snapshot, ctx);
     }
@@ -54,17 +60,23 @@ public class EnvironmentalCollector implements ContextCollector {
     private void collectWifiInfo(ContextSnapshot snapshot, CollectorContext ctx) {
         WifiManager wifiManager = (WifiManager) ctx.appContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         if (wifiManager == null) {
+            Log.d(TAG, "cannot get wifiSsidHash | reason : wifi manager unavailable");
             return;
         }
         if (ContextCompat.checkSelfPermission(ctx.appContext, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "cannot get wifiSsidHash | reason : ACCESS_WIFI_STATE permission denied");
             return;
         }
         if (ContextCompat.checkSelfPermission(ctx.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(ctx.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "cannot get wifiSsidHash | reason : location permission denied");
             return;
         }
         WifiInfo info = wifiManager.getConnectionInfo();
-        if (info == null) return;
+        if (info == null) {
+            Log.d(TAG, "cannot get wifiSsidHash | reason : wifi connection info unavailable");
+            return;
+        }
         String ssid = info.getSSID();
         PrivacySettings settings = new PrivacySettings(ctx.appContext);
         if (settings.hashWifiSsid()) {

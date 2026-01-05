@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.smarttask.app.contextacquisition.db.ContextSnapshot;
 import com.smarttask.app.contextacquisition.utils.HashUtils;
@@ -16,10 +17,18 @@ import com.smarttask.app.contextacquisition.utils.PrivacySettings;
 import java.util.concurrent.TimeUnit;
 
 public class CalendarCollector implements ContextCollector {
+
+    private static final String TAG = "contextCollector";
     @Override
     public void collect(ContextSnapshot snapshot, CollectorContext ctx) {
         if (!PermissionUtils.hasCalendar(ctx.appContext)) {
             snapshot.permissionState = appendState(snapshot.permissionState, "CALENDAR_DENIED");
+            Log.d(TAG, "cannot get isInMeeting | reason : calendar permission denied");
+            Log.d(TAG, "cannot get currentEventId | reason : calendar permission denied");
+            Log.d(TAG, "cannot get currentEventTitle | reason : calendar permission denied");
+            Log.d(TAG, "cannot get eventBusyStatus | reason : calendar permission denied");
+            Log.d(TAG, "cannot get minutesLeftInEvent | reason : calendar permission denied");
+            Log.d(TAG, "cannot get minutesToNextEvent | reason : calendar permission denied");
             return;
         }
         long now = ctx.now;
@@ -41,7 +50,15 @@ public class CalendarCollector implements ContextCollector {
                 CalendarContract.Instances.AVAILABILITY
         };
         Cursor cursor = context.getContentResolver().query(builder.build(), projection, null, null, CalendarContract.Instances.BEGIN + " ASC");
-        if (cursor == null) return;
+        if (cursor == null) {
+            Log.d(TAG, "cannot get isInMeeting | reason : calendar query returned null cursor");
+            Log.d(TAG, "cannot get currentEventId | reason : calendar query returned null cursor");
+            Log.d(TAG, "cannot get currentEventTitle | reason : calendar query returned null cursor");
+            Log.d(TAG, "cannot get eventBusyStatus | reason : calendar query returned null cursor");
+            Log.d(TAG, "cannot get minutesLeftInEvent | reason : calendar query returned null cursor");
+            Log.d(TAG, "cannot get minutesToNextEvent | reason : calendar query returned null cursor");
+            return;
+        }
         PrivacySettings settings = new PrivacySettings(context);
         try {
             long nextStart = Long.MAX_VALUE;
