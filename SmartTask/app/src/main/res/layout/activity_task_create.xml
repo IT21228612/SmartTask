@@ -19,9 +19,9 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_title_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapSentences" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapSentences" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -33,9 +33,46 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_description_input"
                 android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:minLines="3" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/task_category_label"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        <Spinner
+            android:id="@+id/task_category_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/task_priority_label"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        <Spinner
+            android:id="@+id/task_priority_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/task_estimated_duration_label">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/task_estimated_duration_input"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
-                android:minLines="3" />
+                android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
@@ -53,11 +90,11 @@
                 android:text="@string/task_due_date_label" />
 
             <Button
-                android:id="@+id/task_clear_due_date_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/task_clear_due_date" />
+            android:id="@+id/task_clear_due_date_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/task_clear_due_date" />
         </LinearLayout>
 
         <TextView
@@ -68,17 +105,65 @@
             android:text="@string/task_due_date_not_set"
             android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="@string/task_priority_label"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/task_preferred_start_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/task_preferred_start_label" />
+
+            <Button
+                android:id="@+id/task_clear_preferred_start_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/task_clear_due_date" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/task_preferred_start_display"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/task_preferred_time_not_set"
             android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-        <Spinner
-            android:id="@+id/task_priority_spinner"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/task_preferred_end_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/task_preferred_end_label" />
+
+            <Button
+                android:id="@+id/task_clear_preferred_end_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/task_clear_due_date" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/task_preferred_end_display"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/task_preferred_time_not_set"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
 
         <Button
             android:id="@+id/task_location_button"
@@ -88,6 +173,32 @@
             android:text="@string/task_add_location"
             android:textAllCaps="false" />
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/task_location_label">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/task_location_label_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapSentences" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/task_location_radius_label">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/task_location_radius_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <TextView
             android:id="@+id/task_location_display"
             android:layout_width="match_parent"
@@ -95,6 +206,26 @@
             android:layout_marginTop="8dp"
             android:text="@string/task_location_not_set"
             android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/task_notifications_label"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+            <Switch
+                android:id="@+id/task_notifications_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

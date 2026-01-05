@@ -21,7 +21,7 @@ public interface TaskDao {
     @Delete
     void deleteTask(Task task);
 
-    @Query("SELECT * FROM tasks ORDER BY createdAt DESC")
+    @Query("SELECT * FROM tasks ORDER BY completed ASC, updatedAt DESC")
     List<Task> getAllTasks();
 
     @Query("SELECT * FROM tasks ORDER BY CASE WHEN dueAt IS NULL THEN 1 ELSE 0 END, dueAt ASC")

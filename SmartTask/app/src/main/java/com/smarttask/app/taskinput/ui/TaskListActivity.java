@@ -96,6 +96,16 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         refreshTasks();
     }
 
+    @Override
+    public void onTaskCompletionToggled(Task task, boolean isCompleted) {
+        task.setCompleted(isCompleted);
+        long now = System.currentTimeMillis();
+        task.setUpdatedAt(now);
+        task.setCompletedAt(isCompleted ? now : null);
+        taskDao.updateTask(task);
+        refreshTasks();
+    }
+
     private void showDeleteConfirmation(Task task, int position) {
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle(R.string.delete_task_title)

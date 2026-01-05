@@ -4,4 +4,11 @@
         <item>@string/task_priority_medium</item>
         <item>@string/task_priority_high</item>
     </string-array>
+
+    <string-array name="task_category_options">
+        <item>@string/task_category_work</item>
+        <item>@string/task_category_study</item>
+        <item>@string/task_category_home</item>
+        <item>@string/task_category_personal</item>
+    </string-array>
 </resources>
