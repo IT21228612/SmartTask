@@ -28,7 +28,7 @@ public class DatabaseTableAdapter extends RecyclerView.Adapter<DatabaseTableAdap
     @Override
     public void onBindViewHolder(@NonNull TableViewHolder holder, int position) {
         TableData table = tables.get(position);
-        holder.tableName.setText(table.getTableName());
+        holder.tableName.setText(table.getDisplayName());
         holder.tableEmptyRows.setVisibility(table.getRows().isEmpty() ? View.VISIBLE : View.GONE);
         holder.tableRowsContainer.removeAllViews();
 
@@ -74,12 +74,18 @@ public class DatabaseTableAdapter extends RecyclerView.Adapter<DatabaseTableAdap
     }
 
     public static class TableData {
+        private final String databaseName;
         private final String tableName;
         private final List<String> rows;
 
-        public TableData(String tableName, List<String> rows) {
+        public TableData(String databaseName, String tableName, List<String> rows) {
+            this.databaseName = databaseName;
             this.tableName = tableName;
             this.rows = rows;
+        }
+
+        public String getDatabaseName() {
+            return databaseName;
         }
 
         public String getTableName() {
@@ -88,6 +94,13 @@ public class DatabaseTableAdapter extends RecyclerView.Adapter<DatabaseTableAdap
 
         public List<String> getRows() {
             return rows;
+        }
+
+        public String getDisplayName() {
+            if (databaseName == null || databaseName.isEmpty()) {
+                return tableName;
+            }
+            return databaseName + " • " + tableName;
         }
     }
 }

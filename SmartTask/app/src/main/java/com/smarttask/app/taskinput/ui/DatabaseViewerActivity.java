@@ -13,6 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.smarttask.app.R;
+import com.smarttask.app.contextacquisition.db.ContextDatabase;
 import com.smarttask.app.taskinput.db.TaskDatabase;
 
 import java.util.ArrayList;
@@ -60,10 +61,17 @@ public class DatabaseViewerActivity extends AppCompatActivity {
     }
 
     private List<DatabaseTableAdapter.TableData> queryTables() {
-        SupportSQLiteDatabase database = TaskDatabase.getInstance(getApplicationContext())
-                .getOpenHelper()
-                .getReadableDatabase();
         List<DatabaseTableAdapter.TableData> tables = new ArrayList<>();
+        collectTablesFromDatabase("Tasks", TaskDatabase.getInstance(getApplicationContext())
+                .getOpenHelper()
+                .getReadableDatabase(), tables);
+        collectTablesFromDatabase("Context", ContextDatabase.getInstance(getApplicationContext())
+                .getOpenHelper()
+                .getReadableDatabase(), tables);
+        return tables;
+    }
+
+    private void collectTablesFromDatabase(String databaseLabel, SupportSQLiteDatabase database, List<DatabaseTableAdapter.TableData> outTables) {
         Cursor cursor = null;
         try {
             cursor = database.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
@@ -73,14 +81,13 @@ public class DatabaseViewerActivity extends AppCompatActivity {
                     continue;
                 }
                 List<String> rows = queryRows(database, tableName);
-                tables.add(new DatabaseTableAdapter.TableData(tableName, rows));
+                outTables.add(new DatabaseTableAdapter.TableData(databaseLabel, tableName, rows));
             }
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
         }
-        return tables;
     }
 
     private List<String> queryRows(SupportSQLiteDatabase database, String tableName) {
