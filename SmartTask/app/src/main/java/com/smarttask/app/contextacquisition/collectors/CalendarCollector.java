@@ -2,6 +2,7 @@ package com.smarttask.app.contextacquisition.collectors;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.ContentUris;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
@@ -28,8 +29,9 @@ public class CalendarCollector implements ContextCollector {
 
     private void queryCalendar(Context context, ContextSnapshot snapshot, long start, long end) {
         Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
-        CalendarContract.Instances.appendId(builder, start - TimeUnit.HOURS.toMillis(12));
-        CalendarContract.Instances.appendId(builder, end);
+        ContentUris.appendId(builder, start - TimeUnit.HOURS.toMillis(12));
+        ContentUris.appendId(builder, end);
+
 
         String[] projection = {
                 CalendarContract.Instances.EVENT_ID,
