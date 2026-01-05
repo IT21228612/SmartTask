@@ -4,6 +4,7 @@ import android.content.Context;
 
 import android.util.Log;
 
+import com.smarttask.app.contextacquisition.activity.ActivityRecognitionRegistrar;
 import com.smarttask.app.contextacquisition.activity.ActivityStore;
 import com.smarttask.app.contextacquisition.db.ContextSnapshot;
 import com.smarttask.app.contextacquisition.utils.PermissionUtils;
@@ -22,6 +23,7 @@ public class ActivityCollector implements ContextCollector {
             Log.d(TAG, "cannot get isMoving | reason : activity recognition permission denied");
             return;
         }
+        ActivityRecognitionRegistrar.getInstance(ctx.appContext).ensureUpdatesRequested();
         ActivityStore.ActivityState state = ActivityStore.getInstance(ctx.appContext).getLastActivity();
         if (state != null) {
             snapshot.activityType = state.type;
