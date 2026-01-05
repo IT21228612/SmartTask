@@ -55,4 +55,17 @@
     <string name="validation_error_title">Please fix these before saving</string>
     <string name="error_preferred_end_before_start">Preferred end time cannot be before the preferred start time.</string>
     <string name="error_due_before_preferred_end">Due date cannot be before the preferred end time.</string>
+    <string name="menu_user_profile">User</string>
+    <string name="menu_sample_one">Sample item 1</string>
+    <string name="menu_sample_two">Sample item 2</string>
+    <string name="menu_debug">Debug</string>
+    <string name="debug_title">Debug tools</string>
+    <string name="debug_description">Quick access to debugging utilities.</string>
+    <string name="debug_view_database">View database</string>
+    <string name="debug_view_log">View log</string>
+    <string name="database_viewer_title">Database tables</string>
+    <string name="database_loading">Loading recent rows…</string>
+    <string name="database_empty_state">No tables found.</string>
+    <string name="database_no_rows">No rows in this table.</string>
+    <string name="database_recent_rows_label">Most recent 50 rows</string>
 </resources>

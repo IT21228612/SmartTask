@@ -6,9 +6,26 @@
     android:layout_height="match_parent"
     tools:context=".taskinput.ui.TaskListActivity">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/task_list_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorSurface"
+            app:menu="@menu/menu_task_list_toolbar"
+            app:navigationIcon="@drawable/ic_menu_button"
+            app:navigationIconTint="?attr/colorOnSurface"
+            app:title="@string/app_name"
+            app:titleCentered="true" />
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <TextView
             android:id="@+id/empty_view"
