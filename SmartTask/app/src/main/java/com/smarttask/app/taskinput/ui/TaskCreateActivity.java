@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 
 import com.smarttask.app.R;
 import com.smarttask.app.taskinput.db.Task;
@@ -26,7 +27,10 @@ import com.smarttask.app.taskinput.db.TaskDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class TaskCreateActivity extends AppCompatActivity {
 
@@ -85,6 +89,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         Button preferredEndButton = findViewById(R.id.task_preferred_end_button);
         Button clearPreferredEndButton = findViewById(R.id.task_clear_preferred_end_button);
         Button locationButton = findViewById(R.id.task_location_button);
+        Button clearLocationButton = findViewById(R.id.task_clear_location_button);
         Button saveButton = findViewById(R.id.save_task_button);
         Button cancelButton = findViewById(R.id.cancel_task_button);
 
@@ -120,6 +125,7 @@ public class TaskCreateActivity extends AppCompatActivity {
             updatePreferredEndDisplay();
         });
         locationButton.setOnClickListener(v -> openLocationPicker());
+        clearLocationButton.setOnClickListener(v -> clearLocation(locationDisplay));
         saveButton.setOnClickListener(v -> saveTask());
         cancelButton.setOnClickListener(v -> finish());
 
@@ -237,6 +243,7 @@ public class TaskCreateActivity extends AppCompatActivity {
                         selectedPreferredEnd = value;
                         updatePreferredEndDisplay();
                     }
+                    updateEstimatedDurationFromPreferredTimes();
                 },
                 calendar.get(Calendar.HOUR_OF_DAY),
                 calendar.get(Calendar.MINUTE),
@@ -269,6 +276,51 @@ public class TaskCreateActivity extends AppCompatActivity {
         }
     }
 
+    private void updateEstimatedDurationFromPreferredTimes() {
+        if (selectedPreferredStart != null && selectedPreferredEnd != null) {
+            long diffMillis = selectedPreferredEnd - selectedPreferredStart;
+            if (diffMillis >= 0) {
+                long minutes = TimeUnit.MILLISECONDS.toMinutes(diffMillis);
+                estimatedDurationInput.setText(String.valueOf(minutes));
+            }
+        }
+    }
+
+    private boolean hasValidationErrors() {
+        List<String> errors = new ArrayList<>();
+
+        if (selectedPreferredStart != null && selectedPreferredEnd != null && selectedPreferredEnd < selectedPreferredStart) {
+            errors.add(getString(R.string.error_preferred_end_before_start));
+        }
+
+        if (selectedDueDate != null && selectedPreferredEnd != null && selectedDueDate < selectedPreferredEnd) {
+            errors.add(getString(R.string.error_due_before_preferred_end));
+        }
+
+        if (!errors.isEmpty()) {
+            showValidationDialog(errors);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void showValidationDialog(List<String> errors) {
+        StringBuilder message = new StringBuilder();
+        for (String error : errors) {
+            if (message.length() > 0) {
+                message.append("\n");
+            }
+            message.append("• ").append(error);
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.validation_error_title)
+                .setMessage(message.toString())
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
     private void saveTask() {
         String title = titleInput.getText().toString().trim();
         String description = descriptionInput.getText().toString().trim();
@@ -282,6 +334,10 @@ public class TaskCreateActivity extends AppCompatActivity {
 
         if (createdAt == -1L) {
             createdAt = System.currentTimeMillis();
+        }
+
+        if (hasValidationErrors()) {
+            return;
         }
 
         int priority = prioritySpinner.getSelectedItemPosition();
@@ -324,6 +380,14 @@ public class TaskCreateActivity extends AppCompatActivity {
         Toast.makeText(this, R.string.task_saved, Toast.LENGTH_SHORT).show();
         setResult(Activity.RESULT_OK);
         finish();
+    }
+
+    private void clearLocation(TextView locationDisplay) {
+        selectedLat = null;
+        selectedLng = null;
+        selectedAddress = null;
+        locationLabelInput.setText("");
+        updateLocationDisplay(locationDisplay);
     }
 
     private void openLocationPicker() {

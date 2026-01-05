@@ -6,8 +6,11 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.graphics.Paint;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.smarttask.app.R;
@@ -93,6 +96,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 dueDateView.setText(dateFormat.format(date));
                 dueDateView.setVisibility(View.VISIBLE);
             } else {
+                dueDateView.setText(null);
                 dueDateView.setVisibility(View.GONE);
             }
 
@@ -101,6 +105,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             completedCheckBox.setOnCheckedChangeListener(null);
             completedCheckBox.setChecked(task.isCompleted());
             completedCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> listener.onTaskCompletionToggled(task, isChecked));
+            applyCompletionStyles(task.isCompleted());
 
             itemView.setOnClickListener(v -> listener.onTaskClicked(task));
             itemView.setOnLongClickListener(v -> {
@@ -117,6 +122,27 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                     return itemView.getContext().getString(R.string.task_priority_medium);
                 default:
                     return itemView.getContext().getString(R.string.task_priority_low);
+            }
+        }
+
+        private void applyCompletionStyles(boolean isCompleted) {
+            setStrikeThrough(titleView, isCompleted);
+            setStrikeThrough(dueDateView, isCompleted);
+            setStrikeThrough(priorityView, isCompleted);
+
+            CardView cardView = (CardView) itemView;
+            int backgroundColor = ContextCompat.getColor(
+                    itemView.getContext(),
+                    isCompleted ? R.color.task_completed_background : R.color.white
+            );
+            cardView.setCardBackgroundColor(backgroundColor);
+        }
+
+        private void setStrikeThrough(TextView textView, boolean enabled) {
+            if (enabled) {
+                textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            } else {
+                textView.setPaintFlags(textView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
             }
         }
     }
