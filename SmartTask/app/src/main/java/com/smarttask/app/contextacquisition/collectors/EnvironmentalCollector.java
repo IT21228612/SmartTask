@@ -56,6 +56,9 @@ public class EnvironmentalCollector implements ContextCollector {
         if (wifiManager == null) {
             return;
         }
+        if (ContextCompat.checkSelfPermission(ctx.appContext, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
         if (ContextCompat.checkSelfPermission(ctx.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(ctx.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
