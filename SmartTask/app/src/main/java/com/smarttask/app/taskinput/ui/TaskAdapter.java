@@ -3,6 +3,7 @@ package com.smarttask.app.taskinput.ui;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,6 +25,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         void onTaskClicked(Task task);
 
         void onTaskLongClicked(Task task);
+
+        void onTaskCompletionToggled(Task task, boolean isCompleted);
     }
 
     private final List<Task> tasks = new ArrayList<>();
@@ -71,6 +74,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         private final TextView dueDateView;
         private final TextView priorityView;
         private final ImageView locationIndicator;
+        private final CheckBox completedCheckBox;
 
         TaskViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -78,6 +82,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             dueDateView = itemView.findViewById(R.id.item_task_due);
             priorityView = itemView.findViewById(R.id.item_task_priority);
             locationIndicator = itemView.findViewById(R.id.item_task_location_icon);
+            completedCheckBox = itemView.findViewById(R.id.item_task_completed_checkbox);
         }
 
         void bind(Task task) {
@@ -93,6 +98,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
             priorityView.setText(itemView.getContext().getString(R.string.task_priority_value, getPriorityLabel(task.getPriority())));
             locationIndicator.setVisibility(task.getLocationLat() != null ? View.VISIBLE : View.GONE);
+            completedCheckBox.setOnCheckedChangeListener(null);
+            completedCheckBox.setChecked(task.isCompleted());
+            completedCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> listener.onTaskCompletionToggled(task, isChecked));
 
             itemView.setOnClickListener(v -> listener.onTaskClicked(task));
             itemView.setOnLongClickListener(v -> {

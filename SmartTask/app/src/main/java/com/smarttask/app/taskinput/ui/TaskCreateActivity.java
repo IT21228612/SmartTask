@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,9 +35,18 @@ public class TaskCreateActivity extends AppCompatActivity {
     private TaskDao taskDao;
     private EditText titleInput;
     private EditText descriptionInput;
+    private EditText estimatedDurationInput;
+    private EditText locationLabelInput;
+    private EditText locationRadiusInput;
     private TextView dueDateDisplay;
+    private TextView preferredStartDisplay;
+    private TextView preferredEndDisplay;
     private Spinner prioritySpinner;
+    private Spinner categorySpinner;
+    private Switch notificationsSwitch;
     private Long selectedDueDate;
+    private Long selectedPreferredStart;
+    private Long selectedPreferredEnd;
     private long editingTaskId = -1L;
     private long createdAt = -1L;
     @Nullable
@@ -46,6 +56,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     @Nullable
     private String selectedAddress;
 
+    private final Calendar calendar = Calendar.getInstance();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault());
 
     @Override
@@ -57,11 +68,22 @@ public class TaskCreateActivity extends AppCompatActivity {
 
         titleInput = findViewById(R.id.task_title_input);
         descriptionInput = findViewById(R.id.task_description_input);
+        estimatedDurationInput = findViewById(R.id.task_estimated_duration_input);
+        locationLabelInput = findViewById(R.id.task_location_label_input);
+        locationRadiusInput = findViewById(R.id.task_location_radius_input);
         dueDateDisplay = findViewById(R.id.task_due_date_display);
+        preferredStartDisplay = findViewById(R.id.task_preferred_start_display);
+        preferredEndDisplay = findViewById(R.id.task_preferred_end_display);
         prioritySpinner = findViewById(R.id.task_priority_spinner);
+        categorySpinner = findViewById(R.id.task_category_spinner);
+        notificationsSwitch = findViewById(R.id.task_notifications_switch);
         TextView locationDisplay = findViewById(R.id.task_location_display);
         Button dueDateButton = findViewById(R.id.task_due_date_button);
         Button clearDueDateButton = findViewById(R.id.task_clear_due_date_button);
+        Button preferredStartButton = findViewById(R.id.task_preferred_start_button);
+        Button clearPreferredStartButton = findViewById(R.id.task_clear_preferred_start_button);
+        Button preferredEndButton = findViewById(R.id.task_preferred_end_button);
+        Button clearPreferredEndButton = findViewById(R.id.task_clear_preferred_end_button);
         Button locationButton = findViewById(R.id.task_location_button);
         Button saveButton = findViewById(R.id.save_task_button);
         Button cancelButton = findViewById(R.id.cancel_task_button);
@@ -74,10 +96,28 @@ public class TaskCreateActivity extends AppCompatActivity {
         priorityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         prioritySpinner.setAdapter(priorityAdapter);
 
+        ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.task_category_options,
+                android.R.layout.simple_spinner_item
+        );
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        categorySpinner.setAdapter(categoryAdapter);
+
         dueDateButton.setOnClickListener(v -> openDueDatePicker());
         clearDueDateButton.setOnClickListener(v -> {
             selectedDueDate = null;
             updateDueDateDisplay();
+        });
+        preferredStartButton.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_START));
+        clearPreferredStartButton.setOnClickListener(v -> {
+            selectedPreferredStart = null;
+            updatePreferredStartDisplay();
+        });
+        preferredEndButton.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_END));
+        clearPreferredEndButton.setOnClickListener(v -> {
+            selectedPreferredEnd = null;
+            updatePreferredEndDisplay();
         });
         locationButton.setOnClickListener(v -> openLocationPicker());
         saveButton.setOnClickListener(v -> saveTask());
@@ -90,6 +130,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         } else {
             createdAt = System.currentTimeMillis();
             updateLocationDisplay(locationDisplay);
+            notificationsSwitch.setChecked(true);
         }
     }
 
@@ -104,20 +145,27 @@ public class TaskCreateActivity extends AppCompatActivity {
         createdAt = task.getCreatedAt();
         titleInput.setText(task.getTitle());
         descriptionInput.setText(task.getDescription());
+        estimatedDurationInput.setText(task.getEstimatedDurationMin() != null ? String.valueOf(task.getEstimatedDurationMin()) : "");
+        locationLabelInput.setText(task.getLocationLabel());
+        locationRadiusInput.setText(task.getLocationRadius() != null ? String.valueOf(task.getLocationRadius()) : "");
         selectedDueDate = task.getDueAt();
         updateDueDateDisplay();
         prioritySpinner.setSelection(Math.max(0, Math.min(task.getPriority(), 2)));
+        int categoryIndex = getCategoryIndex(task.getCategory());
+        categorySpinner.setSelection(categoryIndex);
+        selectedPreferredStart = task.getPreferredStartTime();
+        selectedPreferredEnd = task.getPreferredEndTime();
+        updatePreferredStartDisplay();
+        updatePreferredEndDisplay();
+        notificationsSwitch.setChecked(task.isNotificationsEnabled());
         selectedLat = task.getLocationLat();
         selectedLng = task.getLocationLng();
-        selectedAddress = null;
+        selectedAddress = task.getLocationLabel();
         updateLocationDisplay(findViewById(R.id.task_location_display));
     }
 
     private void openDueDatePicker() {
-        final Calendar calendar = Calendar.getInstance();
-        if (selectedDueDate != null) {
-            calendar.setTimeInMillis(selectedDueDate);
-        }
+        calendar.setTimeInMillis(selectedDueDate != null ? selectedDueDate : System.currentTimeMillis());
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
@@ -151,6 +199,52 @@ public class TaskCreateActivity extends AppCompatActivity {
         timePickerDialog.show();
     }
 
+    private void openTimeSelector(TimeType timeType) {
+        calendar.setTimeInMillis(getInitialTimeForType(timeType));
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                    openTimePickerForType(timeType, calendar);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+        datePickerDialog.show();
+    }
+
+    private long getInitialTimeForType(TimeType timeType) {
+        Long existing = timeType == TimeType.PREFERRED_START ? selectedPreferredStart : selectedPreferredEnd;
+        return existing != null ? existing : System.currentTimeMillis();
+    }
+
+    private void openTimePickerForType(TimeType timeType, Calendar calendar) {
+        TimePickerDialog timePickerDialog = new TimePickerDialog(
+                this,
+                (view, hourOfDay, minute) -> {
+                    calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                    calendar.set(Calendar.MINUTE, minute);
+                    calendar.set(Calendar.SECOND, 0);
+                    calendar.set(Calendar.MILLISECOND, 0);
+                    long value = calendar.getTimeInMillis();
+                    if (timeType == TimeType.PREFERRED_START) {
+                        selectedPreferredStart = value;
+                        updatePreferredStartDisplay();
+                    } else {
+                        selectedPreferredEnd = value;
+                        updatePreferredEndDisplay();
+                    }
+                },
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE),
+                false
+        );
+        timePickerDialog.show();
+    }
+
     private void updateDueDateDisplay() {
         if (selectedDueDate == null) {
             dueDateDisplay.setText(R.string.task_due_date_not_set);
@@ -159,9 +253,27 @@ public class TaskCreateActivity extends AppCompatActivity {
         }
     }
 
+    private void updatePreferredStartDisplay() {
+        if (selectedPreferredStart == null) {
+            preferredStartDisplay.setText(R.string.task_preferred_time_not_set);
+        } else {
+            preferredStartDisplay.setText(dateFormat.format(selectedPreferredStart));
+        }
+    }
+
+    private void updatePreferredEndDisplay() {
+        if (selectedPreferredEnd == null) {
+            preferredEndDisplay.setText(R.string.task_preferred_time_not_set);
+        } else {
+            preferredEndDisplay.setText(dateFormat.format(selectedPreferredEnd));
+        }
+    }
+
     private void saveTask() {
         String title = titleInput.getText().toString().trim();
         String description = descriptionInput.getText().toString().trim();
+        String estimatedDurationText = estimatedDurationInput.getText().toString().trim();
+        String locationRadiusText = locationRadiusInput.getText().toString().trim();
 
         if (TextUtils.isEmpty(title)) {
             titleInput.setError(getString(R.string.task_title_required));
@@ -173,19 +285,36 @@ public class TaskCreateActivity extends AppCompatActivity {
         }
 
         int priority = prioritySpinner.getSelectedItemPosition();
+        String category = categorySpinner.getSelectedItem().toString().toLowerCase(Locale.getDefault());
+        Integer estimatedDuration = parseIntegerSafe(estimatedDurationText);
+        Float locationRadius = parseFloatSafe(locationRadiusText);
+        boolean notificationsEnabled = notificationsSwitch.isChecked();
+        long now = System.currentTimeMillis();
 
         Task task = new Task();
         task.setTitle(title);
         task.setDescription(description);
+        task.setCategory(category);
         task.setCreatedAt(createdAt);
+        task.setUpdatedAt(now);
         task.setDueAt(selectedDueDate);
         task.setPriority(priority);
         task.setLocationLat(selectedLat);
         task.setLocationLng(selectedLng);
-        task.setLocationRadius(null);
+        task.setLocationRadius(locationRadius);
+        task.setLocationLabel(locationLabelInput.getText().toString().trim());
+        task.setEstimatedDurationMin(estimatedDuration);
+        task.setPreferredStartTime(selectedPreferredStart);
+        task.setPreferredEndTime(selectedPreferredEnd);
+        task.setNotificationsEnabled(notificationsEnabled);
+        task.setCompleted(false);
+        task.setArchived(false);
+        task.setSnoozeUntil(null);
+        task.setCompletedAt(null);
 
         if (editingTaskId != -1L) {
             task.setId(editingTaskId);
+            task.setUpdatedAt(now);
             taskDao.updateTask(task);
         } else {
             long newId = taskDao.insertTask(task);
@@ -221,6 +350,45 @@ public class TaskCreateActivity extends AppCompatActivity {
         }
     }
 
+    private int getCategoryIndex(String category) {
+        String[] categories = getResources().getStringArray(R.array.task_category_options);
+        for (int i = 0; i < categories.length; i++) {
+            if (categories[i].equalsIgnoreCase(category)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    @Nullable
+    private Integer parseIntegerSafe(String value) {
+        if (TextUtils.isEmpty(value)) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private Float parseFloatSafe(String value) {
+        if (TextUtils.isEmpty(value)) {
+            return null;
+        }
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private enum TimeType {
+        PREFERRED_START,
+        PREFERRED_END
+    }
+
     private final ActivityResultLauncher<Intent> mapPickerLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
@@ -231,6 +399,9 @@ public class TaskCreateActivity extends AppCompatActivity {
                         selectedLat = lat;
                         selectedLng = lng;
                         selectedAddress = data.getStringExtra(MapPickerActivity.EXTRA_SELECTED_ADDRESS);
+                        if (!TextUtils.isEmpty(selectedAddress)) {
+                            locationLabelInput.setText(selectedAddress);
+                        }
                         updateLocationDisplay(findViewById(R.id.task_location_display));
                         Toast.makeText(this, R.string.task_location_saved, Toast.LENGTH_SHORT).show();
                     }
