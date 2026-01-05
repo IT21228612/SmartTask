@@ -71,11 +71,8 @@ dependencies {
     implementation(libs.work.runtime)
     implementation(libs.lifecycle.process)
     implementation(libs.lifecycle.runtime)
-<<<<<<< Updated upstream
-=======
     implementation(libs.lifecycle.common.java8)
 
->>>>>>> Stashed changes
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
