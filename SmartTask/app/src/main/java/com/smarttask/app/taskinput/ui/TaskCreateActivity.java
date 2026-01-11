@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class TaskCreateActivity extends AppCompatActivity {
 
     public static final String EXTRA_TASK_ID = "task_id";
+    private static final int DEFAULT_LOCATION_RADIUS_METERS = 30;
 
     private TaskDao taskDao;
     private EditText titleInput;
@@ -153,6 +154,7 @@ public class TaskCreateActivity extends AppCompatActivity {
             createdAt = System.currentTimeMillis();
             updateLocationDisplay(locationDisplay);
             notificationsSwitch.setChecked(true);
+            locationRadiusInput.setText(String.valueOf(DEFAULT_LOCATION_RADIUS_METERS));
         }
     }
 
