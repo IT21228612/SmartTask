@@ -108,10 +108,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             applyCompletionStyles(task.isCompleted());
 
             itemView.setOnClickListener(v -> listener.onTaskClicked(task));
-            itemView.setOnLongClickListener(v -> {
-                listener.onTaskLongClicked(task);
-                return true;
-            });
+            itemView.setOnLongClickListener(v -> true);
         }
 
         private String getPriorityLabel(int priority) {
