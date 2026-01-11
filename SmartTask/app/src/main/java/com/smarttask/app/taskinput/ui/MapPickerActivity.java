@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCallback {
+    private static final String TAG = "MapPickerActivity";
 
     public static final String EXTRA_SELECTED_LAT = "extra_selected_lat";
     public static final String EXTRA_SELECTED_LNG = "extra_selected_lng";
@@ -364,8 +365,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 .appendQueryParameter("language", Locale.getDefault().getLanguage())
                 .build()
                 .toString();
-        String response = fetchUrl(url);
+        String response = fetchUrl(url, "places-autocomplete");
         JSONObject json = new JSONObject(response);
+        logMapsStatus("places-autocomplete", json);
         JSONArray predictions = json.optJSONArray("predictions");
         List<PlacePrediction> results = new ArrayList<>();
         if (predictions == null) {
@@ -397,8 +399,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 .appendQueryParameter("language", Locale.getDefault().getLanguage())
                 .build()
                 .toString();
-        String response = fetchUrl(url);
+        String response = fetchUrl(url, "places-details");
         JSONObject json = new JSONObject(response);
+        logMapsStatus("places-details", json);
         JSONObject result = json.optJSONObject("result");
         if (result == null) {
             return null;
@@ -435,8 +438,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 .appendQueryParameter("language", Locale.getDefault().getLanguage())
                 .build()
                 .toString();
-        String response = fetchUrl(url);
+        String response = fetchUrl(url, "geocode-reverse");
         JSONObject json = new JSONObject(response);
+        logMapsStatus("geocode-reverse", json);
         JSONArray results = json.optJSONArray("results");
         if (results == null || results.length() == 0) {
             return null;
@@ -446,12 +450,34 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         return TextUtils.isEmpty(address) ? null : address;
     }
 
-    private String fetchUrl(String urlString) throws IOException {
+    private String fetchUrl(String urlString, String requestLabel) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
         connection.setConnectTimeout(10000);
         connection.setReadTimeout(10000);
-        try (InputStream stream = connection.getInputStream();
-             InputStreamReader reader = new InputStreamReader(stream);
+        try {
+            int responseCode = connection.getResponseCode();
+            boolean isError = responseCode >= 400;
+            InputStream stream = isError ? connection.getErrorStream() : connection.getInputStream();
+            String responseBody = readStream(stream);
+            String safeUrl = sanitizeUrl(urlString);
+            if (isError) {
+                Log.e(TAG, "Maps API error (" + requestLabel + ") code=" + responseCode
+                        + " url=" + safeUrl + " body=" + responseBody);
+            } else {
+                Log.d(TAG, "Maps API response (" + requestLabel + ") code=" + responseCode
+                        + " url=" + safeUrl + " body=" + responseBody);
+            }
+            return responseBody;
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private String readStream(InputStream stream) throws IOException {
+        if (stream == null) {
+            return "";
+        }
+        try (InputStreamReader reader = new InputStreamReader(stream);
              BufferedReader buffered = new BufferedReader(reader)) {
             StringBuilder builder = new StringBuilder();
             String line;
@@ -459,9 +485,33 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 builder.append(line);
             }
             return builder.toString();
-        } finally {
-            connection.disconnect();
         }
+    }
+
+    private void logMapsStatus(String requestLabel, JSONObject json) {
+        if (json == null) {
+            Log.w(TAG, "Maps API response (" + requestLabel + ") returned null JSON.");
+            return;
+        }
+        String status = json.optString("status");
+        String errorMessage = json.optString("error_message");
+        if (!TextUtils.isEmpty(status) || !TextUtils.isEmpty(errorMessage)) {
+            Log.w(TAG, "Maps API status (" + requestLabel + ") status=" + status
+                    + " error_message=" + errorMessage);
+        }
+    }
+
+    private String sanitizeUrl(String urlString) {
+        android.net.Uri uri = android.net.Uri.parse(urlString);
+        android.net.Uri.Builder builder = uri.buildUpon().clearQuery();
+        for (String param : uri.getQueryParameterNames()) {
+            if ("key".equals(param)) {
+                builder.appendQueryParameter(param, "REDACTED");
+            } else {
+                builder.appendQueryParameter(param, uri.getQueryParameter(param));
+            }
+        }
+        return builder.build().toString();
     }
 
     private String getMapsApiKey() {
