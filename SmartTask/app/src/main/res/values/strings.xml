@@ -70,6 +70,4 @@
     <string name="database_recent_rows_label">Most recent 25 rows</string>
     <string name="database_table_selector_label">Select a table</string>
     <string name="database_table_selector_hint">Table</string>
-    <string name="database_property_name">Property name</string>
-    <string name="database_property_value">Property value</string>
 </resources>
