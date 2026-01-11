@@ -67,6 +67,7 @@ dependencies {
     annotationProcessor(libs.room.compiler)
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
+    implementation(libs.places)
 
     implementation(libs.work.runtime)
     implementation(libs.lifecycle.process)
