@@ -19,8 +19,11 @@ import com.smarttask.app.R;
 import com.smarttask.app.contextacquisition.db.ContextDatabase;
 import com.smarttask.app.taskinput.db.TaskDatabase;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DatabaseViewerActivity extends AppCompatActivity {
 
@@ -112,7 +115,7 @@ public class DatabaseViewerActivity extends AppCompatActivity {
             while (rowCursor.moveToNext()) {
                 List<String> values = new ArrayList<>();
                 for (int i = 0; i < cursorColumnNames.length; i++) {
-                    values.add(readValue(rowCursor, i));
+                    values.add(readValue(rowCursor, i, cursorColumnNames[i]));
                 }
                 rows.add(new DatabaseRowAdapter.DatabaseRow(values));
             }
@@ -124,12 +127,12 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         return new TableRows(columnNames, rows);
     }
 
-    private String readValue(Cursor cursor, int index) {
+    private String readValue(Cursor cursor, int index, String columnName) {
         switch (cursor.getType(index)) {
             case Cursor.FIELD_TYPE_NULL:
                 return "null";
             case Cursor.FIELD_TYPE_INTEGER:
-                return String.valueOf(cursor.getLong(index));
+                return formatIntegerValue(cursor.getLong(index), columnName);
             case Cursor.FIELD_TYPE_FLOAT:
                 return String.valueOf(cursor.getDouble(index));
             case Cursor.FIELD_TYPE_STRING:
@@ -140,6 +143,26 @@ public class DatabaseViewerActivity extends AppCompatActivity {
             default:
                 return "";
         }
+    }
+
+    private String formatIntegerValue(long value, String columnName) {
+        if (shouldFormatEpochMillis(columnName, value)) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+            return formatter.format(new Date(value));
+        }
+        return String.valueOf(value);
+    }
+
+    private boolean shouldFormatEpochMillis(String columnName, long value) {
+        if (value <= 0) {
+            return false;
+        }
+        String normalized = columnName == null ? "" : columnName.toLowerCase(Locale.US);
+        boolean hasDateHint = normalized.contains("time")
+                || normalized.contains("date")
+                || normalized.contains("timestamp");
+        boolean looksLikeMillis = value >= 100000000000L;
+        return hasDateHint && looksLikeMillis;
     }
 
     private void updateTableSelector() {
