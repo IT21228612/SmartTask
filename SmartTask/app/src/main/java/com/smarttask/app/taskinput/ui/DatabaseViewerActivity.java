@@ -3,6 +3,7 @@ package com.smarttask.app.taskinput.ui;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.smarttask.app.R;
 import com.smarttask.app.contextacquisition.db.ContextDatabase;
@@ -24,7 +26,9 @@ public class DatabaseViewerActivity extends AppCompatActivity {
     private RecyclerView tableRecyclerView;
     private View progressBar;
     private TextView emptyView;
-    private DatabaseTableAdapter adapter;
+    private DatabaseRowAdapter adapter;
+    private MaterialAutoCompleteTextView tableSelector;
+    private final List<TableData> tables = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -37,8 +41,9 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         tableRecyclerView = findViewById(R.id.database_table_recycler_view);
         progressBar = findViewById(R.id.database_progress);
         emptyView = findViewById(R.id.database_empty_view);
+        tableSelector = findViewById(R.id.database_table_selector);
 
-        adapter = new DatabaseTableAdapter();
+        adapter = new DatabaseRowAdapter();
         tableRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         tableRecyclerView.setAdapter(adapter);
 
@@ -48,20 +53,21 @@ public class DatabaseViewerActivity extends AppCompatActivity {
     private void loadTables() {
         progressBar.setVisibility(View.VISIBLE);
         new Thread(() -> {
-            List<DatabaseTableAdapter.TableData> tables = queryTables();
+            List<TableData> tables = queryTables();
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
                 progressBar.setVisibility(View.GONE);
-                adapter.submitTables(tables);
-                emptyView.setVisibility(tables.isEmpty() ? View.VISIBLE : View.GONE);
+                this.tables.clear();
+                this.tables.addAll(tables);
+                updateTableSelector();
             });
         }).start();
     }
 
-    private List<DatabaseTableAdapter.TableData> queryTables() {
-        List<DatabaseTableAdapter.TableData> tables = new ArrayList<>();
+    private List<TableData> queryTables() {
+        List<TableData> tables = new ArrayList<>();
         collectTablesFromDatabase("Tasks", TaskDatabase.getInstance(getApplicationContext())
                 .getOpenHelper()
                 .getReadableDatabase(), tables);
@@ -71,7 +77,7 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         return tables;
     }
 
-    private void collectTablesFromDatabase(String databaseLabel, SupportSQLiteDatabase database, List<DatabaseTableAdapter.TableData> outTables) {
+    private void collectTablesFromDatabase(String databaseLabel, SupportSQLiteDatabase database, List<TableData> outTables) {
         Cursor cursor = null;
         try {
             cursor = database.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
@@ -80,8 +86,8 @@ public class DatabaseViewerActivity extends AppCompatActivity {
                 if ("android_metadata".equals(tableName) || "room_master_table".equals(tableName)) {
                     continue;
                 }
-                List<String> rows = queryRows(database, tableName);
-                outTables.add(new DatabaseTableAdapter.TableData(databaseLabel, tableName, rows));
+                List<DatabaseRowAdapter.DatabaseRow> rows = queryRows(database, tableName);
+                outTables.add(new TableData(databaseLabel, tableName, rows));
             }
         } finally {
             if (cursor != null) {
@@ -90,21 +96,18 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         }
     }
 
-    private List<String> queryRows(SupportSQLiteDatabase database, String tableName) {
-        List<String> rows = new ArrayList<>();
+    private List<DatabaseRowAdapter.DatabaseRow> queryRows(SupportSQLiteDatabase database, String tableName) {
+        List<DatabaseRowAdapter.DatabaseRow> rows = new ArrayList<>();
         Cursor rowCursor = null;
         try {
-            rowCursor = database.query("SELECT * FROM \"" + tableName + "\" ORDER BY rowid DESC LIMIT 50");
+            rowCursor = database.query("SELECT * FROM \"" + tableName + "\" ORDER BY rowid DESC LIMIT 25");
             String[] columnNames = rowCursor.getColumnNames();
             while (rowCursor.moveToNext()) {
-                StringBuilder rowBuilder = new StringBuilder();
+                List<DatabaseRowAdapter.RowProperty> properties = new ArrayList<>();
                 for (int i = 0; i < columnNames.length; i++) {
-                    if (i > 0) {
-                        rowBuilder.append(" • ");
-                    }
-                    rowBuilder.append(columnNames[i]).append(": ").append(readValue(rowCursor, i));
+                    properties.add(new DatabaseRowAdapter.RowProperty(columnNames[i], readValue(rowCursor, i)));
                 }
-                rows.add(rowBuilder.toString());
+                rows.add(new DatabaseRowAdapter.DatabaseRow(properties));
             }
         } finally {
             if (rowCursor != null) {
@@ -129,6 +132,88 @@ public class DatabaseViewerActivity extends AppCompatActivity {
                 return "blob(" + (blob != null ? blob.length : 0) + " bytes)";
             default:
                 return "";
+        }
+    }
+
+    private void updateTableSelector() {
+        if (tables.isEmpty()) {
+            emptyView.setText(R.string.database_empty_state);
+            emptyView.setVisibility(View.VISIBLE);
+            adapter.submitRows(new ArrayList<>());
+            tableSelector.setText("", false);
+            return;
+        }
+
+        List<String> tableNames = new ArrayList<>();
+        for (TableData table : tables) {
+            tableNames.add(table.getDisplayName());
+        }
+
+        ArrayAdapter<String> selectorAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                tableNames
+        );
+        tableSelector.setAdapter(selectorAdapter);
+        TableData defaultTable = findDefaultTable();
+        if (defaultTable == null) {
+            defaultTable = tables.get(0);
+        }
+        tableSelector.setText(defaultTable.getDisplayName(), false);
+        updateSelectedTable(defaultTable);
+
+        tableSelector.setOnItemClickListener((parent, view, position, id) -> {
+            if (position >= 0 && position < tables.size()) {
+                updateSelectedTable(tables.get(position));
+            }
+        });
+    }
+
+    private TableData findDefaultTable() {
+        for (TableData table : tables) {
+            if ("tasks".equalsIgnoreCase(table.getTableName())) {
+                return table;
+            }
+        }
+        return null;
+    }
+
+    private void updateSelectedTable(TableData selectedTable) {
+        if (selectedTable == null) {
+            emptyView.setText(R.string.database_empty_state);
+            adapter.submitRows(new ArrayList<>());
+            emptyView.setVisibility(View.VISIBLE);
+            return;
+        }
+        adapter.submitRows(selectedTable.getRows());
+        emptyView.setText(R.string.database_no_rows);
+        emptyView.setVisibility(selectedTable.getRows().isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    static class TableData {
+        private final String databaseName;
+        private final String tableName;
+        private final List<DatabaseRowAdapter.DatabaseRow> rows;
+
+        TableData(String databaseName, String tableName, List<DatabaseRowAdapter.DatabaseRow> rows) {
+            this.databaseName = databaseName;
+            this.tableName = tableName;
+            this.rows = rows;
+        }
+
+        public String getTableName() {
+            return tableName;
+        }
+
+        public List<DatabaseRowAdapter.DatabaseRow> getRows() {
+            return rows;
+        }
+
+        public String getDisplayName() {
+            if (databaseName == null || databaseName.isEmpty()) {
+                return tableName;
+            }
+            return databaseName + " • " + tableName;
         }
     }
 }
