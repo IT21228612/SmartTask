@@ -5,7 +5,9 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -92,6 +94,20 @@ public class TaskCreateActivity extends AppCompatActivity {
         Button clearLocationButton = findViewById(R.id.task_clear_location_button);
         Button saveButton = findViewById(R.id.save_task_button);
         Button cancelButton = findViewById(R.id.cancel_task_button);
+        locationLabelInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                updateLocationDisplay(locationDisplay);
+            }
+        });
 
         ArrayAdapter<CharSequence> priorityAdapter = ArrayAdapter.createFromResource(
                 this,
@@ -404,7 +420,7 @@ public class TaskCreateActivity extends AppCompatActivity {
 
     private void updateLocationDisplay(TextView locationDisplay) {
         if (selectedLat != null && selectedLng != null) {
-            String addressText = selectedAddress;
+            String addressText = getLocationDisplayLabel();
             if (TextUtils.isEmpty(addressText)) {
                 addressText = getString(R.string.task_location_coordinates, selectedLat, selectedLng);
             }
@@ -412,6 +428,14 @@ public class TaskCreateActivity extends AppCompatActivity {
         } else {
             locationDisplay.setText(R.string.task_location_not_set);
         }
+    }
+
+    private String getLocationDisplayLabel() {
+        String label = locationLabelInput.getText().toString().trim();
+        if (!TextUtils.isEmpty(label)) {
+            return label;
+        }
+        return selectedAddress;
     }
 
     private int getCategoryIndex(String category) {
