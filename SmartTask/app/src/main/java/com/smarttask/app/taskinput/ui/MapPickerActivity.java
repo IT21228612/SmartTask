@@ -416,11 +416,11 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
             Toast.makeText(this, R.string.task_location_search_no_results, Toast.LENGTH_SHORT).show();
             return;
         }
-        String address = place.getAddress();
-        if (TextUtils.isEmpty(address)) {
-            address = place.getName();
+        String placeName = place.getName();  // always use place name
+        if (TextUtils.isEmpty(placeName)) {
+            placeName = place.getAddress(); // fallback to address if name is missing
         }
-        updateSelection(latLng, address);
+        updateSelection(latLng, placeName);
         moveCamera(latLng, 15f);
     }
 
