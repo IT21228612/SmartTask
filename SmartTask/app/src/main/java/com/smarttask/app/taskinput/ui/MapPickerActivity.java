@@ -1,11 +1,7 @@
 package com.smarttask.app.taskinput.ui;
-import com.smarttask.app.BuildConfig;
 
-
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,7 +34,16 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.smarttask.app.R;
 import com.smarttask.app.util.AppConstants;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,9 +70,10 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
     private SearchView searchView;
 
     private ArrayAdapter<String> resultsAdapter;
-    private List<Address> lastResults = new ArrayList<>();
+    private final List<PlacePrediction> lastPredictions = new ArrayList<>();
     private FusedLocationProviderClient fusedLocationProviderClient;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private String mapsApiKey;
 
     private final ActivityResultLauncher<String> locationPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
@@ -123,11 +129,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         });
 
         searchResultsList.setOnItemClickListener((parent, view, position, id) -> {
-            if (position >= 0 && position < lastResults.size()) {
-                Address address = lastResults.get(position);
-                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-                updateSelection(latLng, formatAddress(address));
-                moveCamera(latLng, 15f);
+            if (position >= 0 && position < lastPredictions.size()) {
+                PlacePrediction prediction = lastPredictions.get(position);
+                fetchPlaceDetailsAndSelect(prediction);
             }
         });
 
@@ -259,23 +263,14 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
     }
 
     private void fetchAddressForLatLng(LatLng latLng) {
-        if (!Geocoder.isPresent()) {
-            selectedAddress = null;
-            updateSelectedAddressText();
-            return;
-        }
         new Thread(() -> {
-            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+            String address = null;
             try {
-                List<Address> addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-                if (addresses != null && !addresses.isEmpty()) {
-                    selectedAddress = formatAddress(addresses.get(0));
-                } else {
-                    selectedAddress = null;
-                }
-            } catch (IOException e) {
-                selectedAddress = null;
+                address = fetchReverseGeocode(latLng);
+            } catch (IOException | JSONException ignored) {
+                address = null;
             }
+            selectedAddress = address;
             mainHandler.post(this::updateSelectedAddressText);
         }).start();
     }
@@ -284,34 +279,31 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         if (TextUtils.isEmpty(query)) {
             return;
         }
-        if (!Geocoder.isPresent()) {
+        if (TextUtils.isEmpty(getMapsApiKey())) {
             Toast.makeText(this, R.string.task_location_search_no_results, Toast.LENGTH_SHORT).show();
             return;
         }
         searchProgress.setVisibility(android.view.View.VISIBLE);
 
         new Thread(() -> {
-            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-            List<Address> results;
+            List<PlacePrediction> results;
             try {
-                List<Address> geocoderResults = geocoder.getFromLocationName(query, 5);
-                results = geocoderResults != null ? geocoderResults : Collections.emptyList();
-            } catch (IOException ignored) {
+                results = fetchPlacePredictions(query);
+            } catch (IOException | JSONException ignored) {
                 results = Collections.emptyList();
             }
 
             List<String> displayTexts = new ArrayList<>();
-            for (Address address : results) {
-                displayTexts.add(formatAddress(address));
+            for (PlacePrediction prediction : results) {
+                displayTexts.add(prediction.description);
             }
 
-            // Copy to a final variable so the lambda can capture it
-            final List<Address> resultsFinal = results;
+            final List<PlacePrediction> resultsFinal = results;
 
             mainHandler.post(() -> {
                 searchProgress.setVisibility(android.view.View.GONE);
-                lastResults.clear();
-                lastResults.addAll(resultsFinal);
+                lastPredictions.clear();
+                lastPredictions.addAll(resultsFinal);
                 resultsAdapter.clear();
                 if (displayTexts.isEmpty()) {
                     resultsAdapter.add(getString(R.string.task_location_search_no_results));
@@ -319,11 +311,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 } else {
                     resultsAdapter.addAll(displayTexts);
                     searchResultsList.setOnItemClickListener((parent, view, position, id) -> {
-                        if (position >= 0 && position < lastResults.size()) {
-                            Address address = lastResults.get(position);
-                            LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-                            updateSelection(latLng, formatAddress(address));
-                            moveCamera(latLng, 15f);
+                        if (position >= 0 && position < lastPredictions.size()) {
+                            PlacePrediction prediction = lastPredictions.get(position);
+                            fetchPlaceDetailsAndSelect(prediction);
                         }
                     });
                 }
@@ -334,27 +324,179 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
 
 
 
-    private String formatAddress(Address address) {
-        List<String> parts = new ArrayList<>();
-        for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
-            String line = address.getAddressLine(i);
-            if (!TextUtils.isEmpty(line)) {
-                parts.add(line);
+    private void fetchPlaceDetailsAndSelect(PlacePrediction prediction) {
+        if (prediction == null || TextUtils.isEmpty(prediction.placeId)) {
+            return;
+        }
+        searchProgress.setVisibility(android.view.View.VISIBLE);
+        new Thread(() -> {
+            PlaceDetails details;
+            try {
+                details = fetchPlaceDetails(prediction.placeId);
+            } catch (IOException | JSONException ignored) {
+                details = null;
+            }
+            PlaceDetails finalDetails = details;
+            mainHandler.post(() -> {
+                searchProgress.setVisibility(android.view.View.GONE);
+                if (finalDetails == null) {
+                    Toast.makeText(this, R.string.task_location_search_no_results, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                updateSelection(finalDetails.latLng, finalDetails.address);
+                moveCamera(finalDetails.latLng, 15f);
+            });
+        }).start();
+    }
+
+    private List<PlacePrediction> fetchPlacePredictions(String query) throws IOException, JSONException {
+        String apiKey = getMapsApiKey();
+        if (TextUtils.isEmpty(apiKey)) {
+            return Collections.emptyList();
+        }
+        String url = new android.net.Uri.Builder()
+                .scheme("https")
+                .authority("maps.googleapis.com")
+                .path("maps/api/place/autocomplete/json")
+                .appendQueryParameter("input", query)
+                .appendQueryParameter("key", apiKey)
+                .appendQueryParameter("types", "geocode")
+                .appendQueryParameter("language", Locale.getDefault().getLanguage())
+                .build()
+                .toString();
+        String response = fetchUrl(url);
+        JSONObject json = new JSONObject(response);
+        JSONArray predictions = json.optJSONArray("predictions");
+        List<PlacePrediction> results = new ArrayList<>();
+        if (predictions == null) {
+            return results;
+        }
+        for (int i = 0; i < predictions.length(); i++) {
+            JSONObject prediction = predictions.getJSONObject(i);
+            String description = prediction.optString("description");
+            String placeId = prediction.optString("place_id");
+            if (!TextUtils.isEmpty(placeId)) {
+                results.add(new PlacePrediction(description, placeId));
             }
         }
-        if (parts.isEmpty()) {
-            String feature = address.getFeatureName();
-            String locality = address.getLocality();
-            if (!TextUtils.isEmpty(feature)) {
-                parts.add(feature);
-            }
-            if (!TextUtils.isEmpty(locality)) {
-                parts.add(locality);
-            }
+        return results;
+    }
+
+    private PlaceDetails fetchPlaceDetails(String placeId) throws IOException, JSONException {
+        String apiKey = getMapsApiKey();
+        if (TextUtils.isEmpty(apiKey)) {
+            return null;
         }
-        if (parts.isEmpty()) {
-            return getString(R.string.task_location_coordinates, address.getLatitude(), address.getLongitude());
+        String url = new android.net.Uri.Builder()
+                .scheme("https")
+                .authority("maps.googleapis.com")
+                .path("maps/api/place/details/json")
+                .appendQueryParameter("place_id", placeId)
+                .appendQueryParameter("fields", "geometry/location,formatted_address,name")
+                .appendQueryParameter("key", apiKey)
+                .appendQueryParameter("language", Locale.getDefault().getLanguage())
+                .build()
+                .toString();
+        String response = fetchUrl(url);
+        JSONObject json = new JSONObject(response);
+        JSONObject result = json.optJSONObject("result");
+        if (result == null) {
+            return null;
         }
-        return TextUtils.join(", ", parts);
+        JSONObject geometry = result.optJSONObject("geometry");
+        JSONObject location = geometry != null ? geometry.optJSONObject("location") : null;
+        if (location == null) {
+            return null;
+        }
+        double lat = location.optDouble("lat", Double.NaN);
+        double lng = location.optDouble("lng", Double.NaN);
+        if (Double.isNaN(lat) || Double.isNaN(lng)) {
+            return null;
+        }
+        String address = result.optString("formatted_address");
+        if (TextUtils.isEmpty(address)) {
+            address = result.optString("name");
+        }
+        return new PlaceDetails(new LatLng(lat, lng), address);
+    }
+
+    private String fetchReverseGeocode(LatLng latLng) throws IOException, JSONException {
+        String apiKey = getMapsApiKey();
+        if (TextUtils.isEmpty(apiKey)) {
+            return null;
+        }
+        String latLngParam = latLng.latitude + "," + latLng.longitude;
+        String url = new android.net.Uri.Builder()
+                .scheme("https")
+                .authority("maps.googleapis.com")
+                .path("maps/api/geocode/json")
+                .appendQueryParameter("latlng", latLngParam)
+                .appendQueryParameter("key", apiKey)
+                .appendQueryParameter("language", Locale.getDefault().getLanguage())
+                .build()
+                .toString();
+        String response = fetchUrl(url);
+        JSONObject json = new JSONObject(response);
+        JSONArray results = json.optJSONArray("results");
+        if (results == null || results.length() == 0) {
+            return null;
+        }
+        JSONObject first = results.getJSONObject(0);
+        String address = first.optString("formatted_address");
+        return TextUtils.isEmpty(address) ? null : address;
+    }
+
+    private String fetchUrl(String urlString) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
+        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(10000);
+        try (InputStream stream = connection.getInputStream();
+             InputStreamReader reader = new InputStreamReader(stream);
+             BufferedReader buffered = new BufferedReader(reader)) {
+            StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = buffered.readLine()) != null) {
+                builder.append(line);
+            }
+            return builder.toString();
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private String getMapsApiKey() {
+        if (mapsApiKey != null) {
+            return mapsApiKey;
+        }
+        try {
+            ApplicationInfo appInfo = getPackageManager()
+                    .getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
+            if (appInfo.metaData != null) {
+                mapsApiKey = appInfo.metaData.getString("com.google.android.geo.API_KEY");
+            }
+        } catch (PackageManager.NameNotFoundException ignored) {
+            mapsApiKey = null;
+        }
+        return mapsApiKey;
+    }
+
+    private static class PlacePrediction {
+        private final String description;
+        private final String placeId;
+
+        private PlacePrediction(String description, String placeId) {
+            this.description = description;
+            this.placeId = placeId;
+        }
+    }
+
+    private static class PlaceDetails {
+        private final LatLng latLng;
+        private final String address;
+
+        private PlaceDetails(LatLng latLng, String address) {
+            this.latLng = latLng;
+            this.address = address;
+        }
     }
 }
