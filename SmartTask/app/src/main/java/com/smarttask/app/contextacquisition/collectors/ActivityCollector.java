@@ -25,7 +25,7 @@ public class ActivityCollector implements ContextCollector {
         }
         ActivityRecognitionRegistrar.getInstance(ctx.appContext).ensureUpdatesRequested();
         ActivityStore.ActivityState state = ActivityStore.getInstance(ctx.appContext).getLastActivity();
-        if (state != null) {
+        if (state != null && System.currentTimeMillis() - state.timestamp < 300_000) {
             snapshot.activityType = state.type;
             snapshot.activityConfidence = state.confidence;
             snapshot.isMoving = isMoving(state.type, snapshot.speedMps);

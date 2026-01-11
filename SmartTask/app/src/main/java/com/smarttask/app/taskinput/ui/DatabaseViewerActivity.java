@@ -160,7 +160,8 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         String normalized = columnName == null ? "" : columnName.toLowerCase(Locale.US);
         boolean hasDateHint = normalized.contains("time")
                 || normalized.contains("date")
-                || normalized.contains("timestamp");
+                || normalized.contains("timestamp")
+                || columnName.endsWith("At");  // <-- new check
         boolean looksLikeMillis = value >= 100000000000L;
         return hasDateHint && looksLikeMillis;
     }
