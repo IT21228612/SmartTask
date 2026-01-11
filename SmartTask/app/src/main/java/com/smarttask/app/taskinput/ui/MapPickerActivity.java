@@ -56,8 +56,6 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
     private static final String TAG = "MapPickerActivity";
     private static final String SRI_LANKA_COUNTRY_CODE = "LK";
     private static final LatLng SRI_LANKA_CENTER = new LatLng(7.8731, 80.7718);
-    private static final LatLng SRI_LANKA_BOUNDS_SW = new LatLng(5.9, 79.4);
-    private static final LatLng SRI_LANKA_BOUNDS_NE = new LatLng(9.9, 81.9);
     private static final double LOCATION_BIAS_DELTA_DEGREES = 0.35;
 
     public static final String EXTRA_SELECTED_LAT = "extra_selected_lat";
@@ -310,7 +308,6 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 .setQuery(query)
                 .setSessionToken(sessionToken)
                 .setLocationBias(buildLocationBias())
-                .setLocationRestriction(buildCountryRestriction())
                 .setCountries(Collections.singletonList(SRI_LANKA_COUNTRY_CODE))
                 .build();
 
@@ -337,7 +334,6 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 .setQuery(query)
                 .setSessionToken(sessionToken)
                 .setLocationBias(buildLocationBias())
-                .setLocationRestriction(buildCountryRestriction())
                 .setCountries(Collections.singletonList(SRI_LANKA_COUNTRY_CODE))
                 .build();
 
@@ -509,10 +505,6 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 center.longitude + LOCATION_BIAS_DELTA_DEGREES
         );
         return RectangularBounds.newInstance(southwest, northeast);
-    }
-
-    private RectangularBounds buildCountryRestriction() {
-        return RectangularBounds.newInstance(SRI_LANKA_BOUNDS_SW, SRI_LANKA_BOUNDS_NE);
     }
 
     private static class PlacePrediction {
