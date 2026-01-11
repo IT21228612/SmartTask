@@ -71,6 +71,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         return null;
     }
 
+    public boolean moveTask(int fromPosition, int toPosition) {
+        if (fromPosition < 0 || toPosition < 0 || fromPosition >= tasks.size() || toPosition >= tasks.size()) {
+            return false;
+        }
+        if (fromPosition == toPosition) {
+            return false;
+        }
+        Task movedTask = tasks.remove(fromPosition);
+        tasks.add(toPosition, movedTask);
+        notifyItemMoved(fromPosition, toPosition);
+        return true;
+    }
+
+    public List<Task> getCurrentTasks() {
+        return new ArrayList<>(tasks);
+    }
+
     class TaskViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView titleView;

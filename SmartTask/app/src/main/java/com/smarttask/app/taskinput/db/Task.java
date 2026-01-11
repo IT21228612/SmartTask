@@ -25,6 +25,8 @@ public class Task {
     private Long dueAt;
     @ColumnInfo(name = "priority", defaultValue = "0")
     private int priority;
+    @ColumnInfo(name = "displayOrder", defaultValue = "0")
+    private long displayOrder;
     @Nullable
     @ColumnInfo(name = "locationLat")
     private Double locationLat;
@@ -126,6 +128,14 @@ public class Task {
 
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    public long getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(long displayOrder) {
+        this.displayOrder = displayOrder;
     }
 
     @Nullable
