@@ -167,8 +167,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
     @Override
     public void onTaskLongClicked(Task task) {
-        taskDao.deleteTask(task);
-        refreshTasks();
+        // Intentionally no-op: long-press should not trigger any action.
     }
 
     @Override
