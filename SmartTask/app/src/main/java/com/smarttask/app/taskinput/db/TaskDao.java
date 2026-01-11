@@ -21,7 +21,7 @@ public interface TaskDao {
     @Delete
     void deleteTask(Task task);
 
-    @Query("SELECT * FROM tasks ORDER BY completed ASC, updatedAt DESC")
+    @Query("SELECT * FROM tasks ORDER BY completed ASC, displayOrder ASC, updatedAt DESC")
     List<Task> getAllTasks();
 
     @Query("SELECT * FROM tasks ORDER BY CASE WHEN dueAt IS NULL THEN 1 ELSE 0 END, dueAt ASC")
@@ -29,4 +29,10 @@ public interface TaskDao {
 
     @Query("SELECT * FROM tasks WHERE id = :taskId LIMIT 1")
     Task getTaskById(long taskId);
+
+    @Query("SELECT MAX(displayOrder) FROM tasks")
+    Long getMaxDisplayOrder();
+
+    @Query("SELECT MIN(displayOrder) FROM tasks")
+    Long getMinDisplayOrder();
 }

@@ -56,6 +56,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private Long selectedPreferredEnd;
     private long editingTaskId = -1L;
     private long createdAt = -1L;
+    private long displayOrder = 0L;
     @Nullable
     private Double selectedLat;
     @Nullable
@@ -167,6 +168,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         }
         editingTaskId = taskId;
         createdAt = task.getCreatedAt();
+        displayOrder = task.getDisplayOrder();
         titleInput.setText(task.getTitle());
         descriptionInput.setText(task.getDescription());
         estimatedDurationInput.setText(task.getEstimatedDurationMin() != null ? String.valueOf(task.getEstimatedDurationMin()) : "");
@@ -373,6 +375,11 @@ public class TaskCreateActivity extends AppCompatActivity {
         task.setUpdatedAt(now);
         task.setDueAt(selectedDueDate);
         task.setPriority(priority);
+        if (editingTaskId == -1L) {
+            Long minDisplayOrder = taskDao.getMinDisplayOrder();
+            displayOrder = minDisplayOrder == null ? 1L : minDisplayOrder - 1L;
+        }
+        task.setDisplayOrder(displayOrder);
         task.setLocationLat(selectedLat);
         task.setLocationLng(selectedLng);
         task.setLocationRadius(locationRadius);

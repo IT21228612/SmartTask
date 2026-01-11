@@ -35,6 +35,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
     private TaskDao taskDao;
     private TaskAdapter adapter;
     private TextView emptyView;
+    private boolean isDragging = false;
 
     private final ActivityResultLauncher<Intent> taskLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -60,10 +61,13 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        ItemTouchHelper.SimpleCallback swipeToActionCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        ItemTouchHelper.SimpleCallback swipeToActionCallback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
+        ) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false;
+                return adapter.moveTask(viewHolder.getAdapterPosition(), target.getAdapterPosition());
             }
 
             @Override
@@ -82,6 +86,23 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
                 onTaskClicked(task);
                 adapter.notifyItemChanged(position);
+            }
+
+            @Override
+            public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
+                super.onSelectedChanged(viewHolder, actionState);
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                    isDragging = true;
+                }
+            }
+
+            @Override
+            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                if (isDragging) {
+                    persistTaskOrder();
+                    isDragging = false;
+                }
             }
 
             @Override
@@ -154,8 +175,45 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
     private void refreshTasks() {
         List<Task> tasks = taskDao.getAllTasks();
+        if (ensureDisplayOrder(tasks)) {
+            tasks = taskDao.getAllTasks();
+        }
         adapter.submitList(tasks);
         emptyView.setVisibility(tasks.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    private boolean ensureDisplayOrder(List<Task> tasks) {
+        boolean hasMissingOrder = false;
+        for (Task task : tasks) {
+            if (task.getDisplayOrder() <= 0) {
+                hasMissingOrder = true;
+                break;
+            }
+        }
+        if (!hasMissingOrder) {
+            return false;
+        }
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
+            long desiredOrder = i + 1L;
+            if (task.getDisplayOrder() != desiredOrder) {
+                task.setDisplayOrder(desiredOrder);
+                taskDao.updateTask(task);
+            }
+        }
+        return true;
+    }
+
+    private void persistTaskOrder() {
+        List<Task> currentTasks = adapter.getCurrentTasks();
+        for (int i = 0; i < currentTasks.size(); i++) {
+            Task task = currentTasks.get(i);
+            long desiredOrder = i + 1L;
+            if (task.getDisplayOrder() != desiredOrder) {
+                task.setDisplayOrder(desiredOrder);
+                taskDao.updateTask(task);
+            }
+        }
     }
 
     @Override
@@ -176,6 +234,13 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         long now = System.currentTimeMillis();
         task.setUpdatedAt(now);
         task.setCompletedAt(isCompleted ? now : null);
+        if (isCompleted) {
+            Long maxDisplayOrder = taskDao.getMaxDisplayOrder();
+            task.setDisplayOrder(maxDisplayOrder == null ? 1L : maxDisplayOrder + 1L);
+        } else {
+            Long minDisplayOrder = taskDao.getMinDisplayOrder();
+            task.setDisplayOrder(minDisplayOrder == null ? 1L : minDisplayOrder - 1L);
+        }
         taskDao.updateTask(task);
         refreshTasks();
     }
