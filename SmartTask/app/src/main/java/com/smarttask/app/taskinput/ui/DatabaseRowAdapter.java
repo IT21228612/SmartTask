@@ -4,8 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TableLayout;
-import android.widget.TableRow;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -32,11 +31,8 @@ public class DatabaseRowAdapter extends RecyclerView.Adapter<DatabaseRowAdapter.
         DatabaseRow row = rows.get(position);
         holder.clearRows();
         Context context = holder.itemView.getContext();
-        for (RowProperty property : row.getProperties()) {
-            TableRow tableRow = new TableRow(context);
-            tableRow.addView(buildCell(context, property.getName(), false));
-            tableRow.addView(buildCell(context, property.getValue(), false));
-            holder.tableLayout.addView(tableRow);
+        for (String value : row.getValues()) {
+            holder.rowContainer.addView(buildCell(context, value, false));
         }
     }
 
@@ -56,13 +52,14 @@ public class DatabaseRowAdapter extends RecyclerView.Adapter<DatabaseRowAdapter.
     private TextView buildCell(Context context, String text, boolean isHeader) {
         TextView cell = new TextView(context);
         cell.setText(text);
-        TableRow.LayoutParams layoutParams = new TableRow.LayoutParams(
-                0,
-                TableRow.LayoutParams.WRAP_CONTENT,
-                1f
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
         );
         cell.setLayoutParams(layoutParams);
         cell.setBackgroundResource(R.drawable.database_table_cell_border);
+        int minWidth = (int) (160 * context.getResources().getDisplayMetrics().density);
+        cell.setMinWidth(minWidth);
         int horizontalPadding = (int) (16 * context.getResources().getDisplayMetrics().density);
         int verticalPadding = (int) (12 * context.getResources().getDisplayMetrics().density);
         cell.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
@@ -76,48 +73,30 @@ public class DatabaseRowAdapter extends RecyclerView.Adapter<DatabaseRowAdapter.
     }
 
     static class RowViewHolder extends RecyclerView.ViewHolder {
-        final TableLayout tableLayout;
+        final LinearLayout rowContainer;
 
         RowViewHolder(@NonNull View itemView) {
             super(itemView);
-            tableLayout = itemView.findViewById(R.id.database_row_table);
+            rowContainer = itemView.findViewById(R.id.database_row_container);
         }
 
         void clearRows() {
-            int childCount = tableLayout.getChildCount();
-            if (childCount > 1) {
-                tableLayout.removeViews(1, childCount - 1);
+            int childCount = rowContainer.getChildCount();
+            if (childCount > 0) {
+                rowContainer.removeViews(0, childCount);
             }
         }
     }
 
     public static class DatabaseRow {
-        private final List<RowProperty> properties;
+        private final List<String> values;
 
-        public DatabaseRow(List<RowProperty> properties) {
-            this.properties = properties;
+        public DatabaseRow(List<String> values) {
+            this.values = values;
         }
 
-        public List<RowProperty> getProperties() {
-            return properties;
-        }
-    }
-
-    public static class RowProperty {
-        private final String name;
-        private final String value;
-
-        public RowProperty(String name, String value) {
-            this.name = name;
-            this.value = value;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getValue() {
-            return value;
+        public List<String> getValues() {
+            return values;
         }
     }
 }
