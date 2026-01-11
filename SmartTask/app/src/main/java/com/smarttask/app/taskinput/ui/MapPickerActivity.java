@@ -36,6 +36,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.AutocompletePrediction;
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
+import com.google.android.libraries.places.api.model.RectangularBounds;
 import com.google.android.libraries.places.api.net.FetchPlaceRequest;
 import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
@@ -53,6 +54,11 @@ import java.util.Locale;
 
 public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final String TAG = "MapPickerActivity";
+    private static final String SRI_LANKA_COUNTRY_CODE = "LK";
+    private static final LatLng SRI_LANKA_CENTER = new LatLng(7.8731, 80.7718);
+    private static final LatLng SRI_LANKA_BOUNDS_SW = new LatLng(5.9, 79.4);
+    private static final LatLng SRI_LANKA_BOUNDS_NE = new LatLng(9.9, 81.9);
+    private static final double LOCATION_BIAS_DELTA_DEGREES = 0.35;
 
     public static final String EXTRA_SELECTED_LAT = "extra_selected_lat";
     public static final String EXTRA_SELECTED_LNG = "extra_selected_lng";
@@ -82,6 +88,7 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private PlacesClient placesClient;
     private AutocompleteSessionToken sessionToken;
+    private LatLng currentLocationLatLng;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSuggestionRunnable;
     private static final long SUGGESTION_DELAY_MS = 250L;
@@ -202,6 +209,7 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 .addOnSuccessListener(location -> {
                     if (location != null) {
                         LatLng userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        currentLocationLatLng = userLatLng;
                         moveCamera(userLatLng, 15f);
                     } else {
                         Toast.makeText(this, R.string.task_location_my_location_unavailable, Toast.LENGTH_SHORT).show();
@@ -301,6 +309,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
                 .setQuery(query)
                 .setSessionToken(sessionToken)
+                .setLocationBias(buildLocationBias())
+                .setLocationRestriction(buildCountryRestriction())
+                .setCountries(Collections.singletonList(SRI_LANKA_COUNTRY_CODE))
                 .build();
 
         placesClient.findAutocompletePredictions(request)
@@ -325,6 +336,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
                 .setQuery(query)
                 .setSessionToken(sessionToken)
+                .setLocationBias(buildLocationBias())
+                .setLocationRestriction(buildCountryRestriction())
+                .setCountries(Collections.singletonList(SRI_LANKA_COUNTRY_CODE))
                 .build();
 
         placesClient.findAutocompletePredictions(request)
@@ -482,6 +496,23 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         Address address = addresses.get(0);
         String line = address.getAddressLine(0);
         return TextUtils.isEmpty(line) ? null : line;
+    }
+
+    private RectangularBounds buildLocationBias() {
+        LatLng center = currentLocationLatLng != null ? currentLocationLatLng : SRI_LANKA_CENTER;
+        LatLng southwest = new LatLng(
+                center.latitude - LOCATION_BIAS_DELTA_DEGREES,
+                center.longitude - LOCATION_BIAS_DELTA_DEGREES
+        );
+        LatLng northeast = new LatLng(
+                center.latitude + LOCATION_BIAS_DELTA_DEGREES,
+                center.longitude + LOCATION_BIAS_DELTA_DEGREES
+        );
+        return RectangularBounds.newInstance(southwest, northeast);
+    }
+
+    private RectangularBounds buildCountryRestriction() {
+        return RectangularBounds.newInstance(SRI_LANKA_BOUNDS_SW, SRI_LANKA_BOUNDS_NE);
     }
 
     private static class PlacePrediction {
