@@ -31,8 +31,23 @@
             android:id="@+id/database_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/database_recent_rows_label"
+            android:text="@string/database_table_selector_label"
             android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/database_table_selector_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/database_table_selector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:hint="@string/database_table_selector_hint" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/database_empty_view"
