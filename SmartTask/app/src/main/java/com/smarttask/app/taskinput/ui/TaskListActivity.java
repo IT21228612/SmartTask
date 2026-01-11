@@ -1,6 +1,9 @@
 package com.smarttask.app.taskinput.ui;
 
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -13,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
@@ -56,7 +60,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        ItemTouchHelper.SimpleCallback swipeToDeleteCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+        ItemTouchHelper.SimpleCallback swipeToActionCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 return false;
@@ -66,13 +70,76 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 Task task = adapter.getTaskAt(position);
-                if (task != null) {
-                    showDeleteConfirmation(task, position);
+                if (task == null) {
+                    adapter.notifyItemChanged(position);
+                    return;
                 }
+
+                if (direction == ItemTouchHelper.LEFT) {
+                    showDeleteConfirmation(task, position);
+                    return;
+                }
+
+                onTaskClicked(task);
+                adapter.notifyItemChanged(position);
+            }
+
+            @Override
+            public void onChildDraw(@NonNull Canvas canvas,
+                                    @NonNull RecyclerView recyclerView,
+                                    @NonNull RecyclerView.ViewHolder viewHolder,
+                                    float dX,
+                                    float dY,
+                                    int actionState,
+                                    boolean isCurrentlyActive) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    View itemView = viewHolder.itemView;
+                    int itemHeight = itemView.getBottom() - itemView.getTop();
+
+                    boolean isSwipeRight = dX > 0;
+                    int iconRes = isSwipeRight ? R.drawable.ic_swipe_edit : R.drawable.ic_swipe_delete;
+                    int backgroundColor = isSwipeRight
+                            ? ContextCompat.getColor(TaskListActivity.this, R.color.swipe_edit_background)
+                            : ContextCompat.getColor(TaskListActivity.this, R.color.swipe_delete_background);
+
+                    Drawable icon = ContextCompat.getDrawable(TaskListActivity.this, iconRes);
+                    ColorDrawable background = new ColorDrawable(backgroundColor);
+
+                    if (dX != 0) {
+                        if (isSwipeRight) {
+                            background.setBounds(itemView.getLeft(), itemView.getTop(),
+                                    itemView.getLeft() + Math.round(dX), itemView.getBottom());
+                        } else {
+                            background.setBounds(itemView.getRight() + Math.round(dX), itemView.getTop(),
+                                    itemView.getRight(), itemView.getBottom());
+                        }
+                        background.draw(canvas);
+                    }
+
+                    if (icon != null) {
+                        int iconHeight = icon.getIntrinsicHeight();
+                        int iconWidth = icon.getIntrinsicWidth();
+                        int iconTop = itemView.getTop() + (itemHeight - iconHeight) / 2;
+                        int iconMargin = (itemHeight - iconHeight) / 2;
+
+                        if (isSwipeRight) {
+                            int iconLeft = itemView.getLeft() + iconMargin;
+                            int iconRight = iconLeft + iconWidth;
+                            icon.setBounds(iconLeft, iconTop, iconRight, iconTop + iconHeight);
+                        } else {
+                            int iconRight = itemView.getRight() - iconMargin;
+                            int iconLeft = iconRight - iconWidth;
+                            icon.setBounds(iconLeft, iconTop, iconRight, iconTop + iconHeight);
+                        }
+                        icon.draw(canvas);
+                    }
+                }
+
+                super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
             }
         };
 
-        new ItemTouchHelper(swipeToDeleteCallback).attachToRecyclerView(recyclerView);
+        new ItemTouchHelper(swipeToActionCallback).attachToRecyclerView(recyclerView);
 
         fab.setOnClickListener(v -> taskLauncher.launch(new Intent(this, TaskCreateActivity.class)));
 
