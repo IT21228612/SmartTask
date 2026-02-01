@@ -26,6 +26,7 @@ public class LocationCollector implements ContextCollector {
     private static final String TAG = "contextCollector";
 
     private static final long STALE_THRESHOLD_MS = TimeUnit.MINUTES.toMillis(3);
+    private static final float MIN_BEARING_SPEED_MPS = 0.5f;
 
     @Override
     public void collect(ContextSnapshot snapshot, CollectorContext ctx) {
@@ -60,7 +61,8 @@ public class LocationCollector implements ContextCollector {
             snapshot.lng = location.getLongitude();
             snapshot.accuracyM = location.hasAccuracy() ? location.getAccuracy() : null;
             snapshot.speedMps = location.hasSpeed() ? location.getSpeed() : null;
-            snapshot.bearingDeg = location.hasBearing() ? location.getBearing() : null;
+            boolean bearingReliable = location.hasSpeed() && location.getSpeed() > MIN_BEARING_SPEED_MPS;
+            snapshot.bearingDeg = bearingReliable && location.hasBearing() ? location.getBearing() : null;
             long ageMs = Math.abs(System.currentTimeMillis() - location.getTime());
             boolean stale = ageMs > STALE_THRESHOLD_MS || usedStaleCachedLocation;
             if (snapshot.accuracyM != null && snapshot.accuracyM > 100f) {
