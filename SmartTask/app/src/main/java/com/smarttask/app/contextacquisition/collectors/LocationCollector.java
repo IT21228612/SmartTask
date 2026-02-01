@@ -25,7 +25,7 @@ public class LocationCollector implements ContextCollector {
 
     private static final String TAG = "contextCollector";
 
-    private static final long STALE_THRESHOLD_MS = TimeUnit.MINUTES.toMillis(2);
+    private static final long STALE_THRESHOLD_MS = TimeUnit.MINUTES.toMillis(3);
 
     @Override
     public void collect(ContextSnapshot snapshot, CollectorContext ctx) {
@@ -40,8 +40,20 @@ public class LocationCollector implements ContextCollector {
         }
         FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(ctx.appContext);
         Location location = getLastKnownLocation(client);
+        boolean usedStaleCachedLocation = false;
         if (location == null) {
             location = getCurrentLocation(client);
+        } else {
+            long ageMs = Math.abs(System.currentTimeMillis() - location.getTime());
+            boolean stale = ageMs > STALE_THRESHOLD_MS;
+            if (stale) {
+                Location currentLocation = getCurrentLocation(client);
+                if (currentLocation != null) {
+                    location = currentLocation;
+                } else {
+                    usedStaleCachedLocation = true;
+                }
+            }
         }
         if (location != null) {
             snapshot.lat = location.getLatitude();
@@ -50,7 +62,7 @@ public class LocationCollector implements ContextCollector {
             snapshot.speedMps = location.hasSpeed() ? location.getSpeed() : null;
             snapshot.bearingDeg = location.hasBearing() ? location.getBearing() : null;
             long ageMs = Math.abs(System.currentTimeMillis() - location.getTime());
-            boolean stale = ageMs > STALE_THRESHOLD_MS;
+            boolean stale = ageMs > STALE_THRESHOLD_MS || usedStaleCachedLocation;
             if (snapshot.accuracyM != null && snapshot.accuracyM > 100f) {
                 snapshot.dataQualityFlags |= DataQualityFlags.LOW_ACCURACY;
             }
