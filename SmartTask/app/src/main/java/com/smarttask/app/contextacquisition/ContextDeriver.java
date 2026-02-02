@@ -31,9 +31,28 @@ public class ContextDeriver {
     }
 
     private String deriveLabel(ContextSnapshot snapshot) {
-        if (snapshot.isInMeeting) return "MEETING";
-        if ("IN_VEHICLE".equals(snapshot.activityType)) return "COMMUTING";
-        if (snapshot.placeLabel != null) return "AT_" + snapshot.placeLabel.toUpperCase(Locale.US);
+        if (snapshot.isInMeeting) {
+            return "MEETING";
+        }
+        if ("IN_VEHICLE".equals(snapshot.activityType)) {
+            return "COMMUTING";
+        }
+        if (snapshot.placeLabel != null) {
+            return "AT_" + snapshot.placeLabel.toUpperCase(Locale.US);
+        }
+        if (snapshot.batteryPct > 0 && snapshot.batteryPct < 20) {
+            return "LOW_BATTERY";
+        }
+        if (snapshot.connectivityType != null
+                && ("NONE".equals(snapshot.connectivityType) || !snapshot.isInternetAvailable)) {
+            return "NO_CONNECTIVITY";
+        }
+        if (snapshot.screenOn && snapshot.deviceUnlocked) {
+            return "AVAILABLE_ACTIVE";
+        }
+        if (!snapshot.screenOn) {
+            return "IDLE_INACTIVE";
+        }
         if (snapshot.minuteOfDay >= 1080 && snapshot.minuteOfDay <= 1380 && snapshot.screenOn) {
             return "EVENING_ACTIVE";
         }
