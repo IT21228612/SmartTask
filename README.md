@@ -145,7 +145,7 @@ Score = w1·Urgency + w2·ContextRelevance + w3·BehavioralAffinity - w4·Interr
 | `permissionState` | Permission health for the snapshot. | `"OK"` or descriptive strings. |
 | `dataQualityFlags` | Bitmask of data quality issues. | `int` (see `DataQualityFlags`). |
 | `anonymized` | Whether the snapshot is anonymized. | `true`/`false`. |
-| `sourceTrigger` | What triggered the capture. | Strings like `"APP_START"`, `"PERIODIC"`, `"GEOFENCE"`, or `"UNKNOWN"`. |
+| `sourceTrigger` | What triggered the capture. | Strings like `"APP_START"`, `"PERIODIC"`, `"GEOFENCE_ENTER"`, `"GEOFENCE_DWELL"`, `"GEOFENCE_EXIT"`, or `"UNKNOWN"`. |
 
 ---
 

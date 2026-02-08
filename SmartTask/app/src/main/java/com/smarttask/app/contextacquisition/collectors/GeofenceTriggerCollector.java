@@ -20,7 +20,7 @@ public class GeofenceTriggerCollector implements ContextCollector {
     private static final String TAG = "contextCollector";
     @Override
     public void collect(ContextSnapshot snapshot, CollectorContext ctx) {
-        if (!"GEOFENCE".equalsIgnoreCase(ctx.sourceTrigger)) {
+        if (!isGeofenceSource(ctx.sourceTrigger)) {
             return;
         }
         GeofencingEvent event = GeofencingEvent.fromIntent(ctx.triggerIntent);
@@ -39,6 +39,12 @@ public class GeofenceTriggerCollector implements ContextCollector {
             Log.d(TAG, "cannot get geofenceId | reason : no triggering geofences");
             Log.d(TAG, "cannot get placeLabel | reason : no triggering geofences");
         }
+    }
+
+    private boolean isGeofenceSource(String sourceTrigger) {
+        return "GEOFENCE_ENTER".equalsIgnoreCase(sourceTrigger)
+                || "GEOFENCE_DWELL".equalsIgnoreCase(sourceTrigger)
+                || "GEOFENCE_EXIT".equalsIgnoreCase(sourceTrigger);
     }
 
     @Nullable
