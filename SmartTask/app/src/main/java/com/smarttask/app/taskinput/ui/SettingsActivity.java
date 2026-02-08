@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -24,6 +25,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    private static final String TAG = "SettingsActivity";
     private static final String LOCATION_TYPE_WORK = "Work";
     private static final String LOCATION_TYPE_HOME = "Home";
 
@@ -149,8 +151,10 @@ public class SettingsActivity extends AppCompatActivity {
                 .subscribe(
                         preferences -> runOnUiThread(() ->
                                 Toast.makeText(this, getString(R.string.work_home_location_saved, type), Toast.LENGTH_SHORT).show()),
-                        throwable -> runOnUiThread(() ->
-                                Toast.makeText(this, R.string.work_home_location_save_failed, Toast.LENGTH_SHORT).show())
+                        throwable -> runOnUiThread(() -> {
+                            Log.e(TAG, "Failed to save " + type + " location", throwable);
+                            Toast.makeText(this, R.string.work_home_location_save_failed, Toast.LENGTH_SHORT).show();
+                        })
                 ));
     }
 
