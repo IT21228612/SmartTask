@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
 
 import com.smarttask.app.R;
+import com.smarttask.app.contextacquisition.api.ContextEngine;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
@@ -401,6 +402,8 @@ public class TaskCreateActivity extends AppCompatActivity {
             long newId = taskDao.insertTask(task);
             task.setId(newId);
         }
+
+        ContextEngine.getInstance(this).syncTaskGeofences();
 
         Toast.makeText(this, R.string.task_saved, Toast.LENGTH_SHORT).show();
         setResult(Activity.RESULT_OK);
