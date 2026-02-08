@@ -11,4 +11,9 @@
         <item>@string/task_category_home</item>
         <item>@string/task_category_personal</item>
     </string-array>
+
+    <string-array name="work_home_location_types">
+        <item>@string/location_type_work</item>
+        <item>@string/location_type_home</item>
+    </string-array>
 </resources>
