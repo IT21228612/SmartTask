@@ -16,12 +16,29 @@ public class WorkHomeLocationStore {
 
     private static final String DATASTORE_FILE_NAME = "app_settings.preferences_pb";
     private static final String TYPE_WORK = "Work";
+    private static final Object DATA_STORE_LOCK = new Object();
+
+    @Nullable
+    private static volatile RxDataStore<Preferences> sharedDataStore;
 
     private final RxDataStore<Preferences> dataStore;
 
     public WorkHomeLocationStore(@NonNull Context context) {
         Context appContext = context.getApplicationContext();
-        dataStore = new RxPreferenceDataStoreBuilder(appContext, DATASTORE_FILE_NAME).build();
+        dataStore = getOrCreateDataStore(appContext);
+    }
+
+    private static RxDataStore<Preferences> getOrCreateDataStore(@NonNull Context context) {
+        RxDataStore<Preferences> local = sharedDataStore;
+        if (local != null) {
+            return local;
+        }
+        synchronized (DATA_STORE_LOCK) {
+            if (sharedDataStore == null) {
+                sharedDataStore = new RxPreferenceDataStoreBuilder(context, DATASTORE_FILE_NAME).build();
+            }
+            return sharedDataStore;
+        }
     }
 
     public Single<WorkHomeLocation> getLocation(@NonNull String type) {
