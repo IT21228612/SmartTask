@@ -268,6 +268,10 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 startActivity(new Intent(this, DebugActivity.class));
                 return true;
             }
+            if (item.getItemId() == R.id.menu_item_settings) {
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            }
             return true;
         });
         popupMenu.show();

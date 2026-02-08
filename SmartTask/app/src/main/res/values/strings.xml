@@ -70,4 +70,18 @@
     <string name="database_recent_rows_label">Most recent 25 rows</string>
     <string name="database_table_selector_label">Select a table</string>
     <string name="database_table_selector_hint">Table</string>
+
+    <string name="menu_settings">Settings</string>
+    <string name="settings_title">Settings</string>
+    <string name="menu_set_work_home">Set Work/Home</string>
+    <string name="location_type_work">Work</string>
+    <string name="location_type_home">Home</string>
+    <string name="work_home_pick_location">Set location</string>
+    <string name="work_home_save_location">Save location</string>
+    <string name="work_home_location_not_set">No location selected</string>
+    <string name="work_home_location_missing">Please pick a location first</string>
+    <string name="work_home_location_saved">%1$s location saved</string>
+    <string name="work_home_location_selected">%1$s: %2$s</string>
+    <string name="work_home_location_load_failed">Could not load saved location</string>
+    <string name="work_home_location_save_failed">Could not save location</string>
 </resources>
