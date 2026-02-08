@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.lifecycle.runtime)
     implementation(libs.lifecycle.common.java8)
     implementation(libs.datastore.preferences.rxjava3)
+    implementation(libs.datastore.preferences)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
