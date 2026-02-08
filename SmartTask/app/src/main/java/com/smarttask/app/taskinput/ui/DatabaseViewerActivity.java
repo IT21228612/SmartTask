@@ -2,6 +2,7 @@ package com.smarttask.app.taskinput.ui;
 
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.TextPaint;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -161,7 +162,7 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         boolean hasDateHint = normalized.contains("time")
                 || normalized.contains("date")
                 || normalized.contains("timestamp")
-                || columnName.endsWith("At");  // <-- new check
+                || normalized.endsWith("at");
         boolean looksLikeMillis = value >= 100000000000L;
         return hasDateHint && looksLikeMillis;
     }
@@ -213,39 +214,78 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         if (selectedTable == null) {
             emptyView.setText(R.string.database_empty_state);
             adapter.submitRows(new ArrayList<>());
-            updateHeaderRow(new ArrayList<>());
+            updateHeaderRow(new ArrayList<>(), new ArrayList<>());
             emptyView.setVisibility(View.VISIBLE);
             return;
         }
-        updateHeaderRow(selectedTable.getColumnNames());
+        List<Integer> columnWidths = computeColumnWidths(selectedTable.getColumnNames(), selectedTable.getRows());
+        updateHeaderRow(selectedTable.getColumnNames(), columnWidths);
+        adapter.setColumnWidths(columnWidths);
         adapter.submitRows(selectedTable.getRows());
         emptyView.setText(R.string.database_no_rows);
         emptyView.setVisibility(selectedTable.getRows().isEmpty() ? View.VISIBLE : View.GONE);
     }
 
-    private void updateHeaderRow(List<String> columnNames) {
+    private void updateHeaderRow(List<String> columnNames, List<Integer> columnWidths) {
         tableHeaderRow.removeAllViews();
         if (columnNames == null || columnNames.isEmpty()) {
             return;
         }
-        int minWidth = (int) (160 * getResources().getDisplayMetrics().density);
         int horizontalPadding = (int) (16 * getResources().getDisplayMetrics().density);
         int verticalPadding = (int) (12 * getResources().getDisplayMetrics().density);
-        for (String columnName : columnNames) {
+        for (int i = 0; i < columnNames.size(); i++) {
             TextView headerCell = new TextView(this);
-            headerCell.setText(columnName);
+            headerCell.setText(columnNames.get(i));
+            int width = (i >= 0 && i < columnWidths.size())
+                    ? columnWidths.get(i)
+                    : LinearLayout.LayoutParams.WRAP_CONTENT;
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    width,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
             headerCell.setLayoutParams(layoutParams);
             headerCell.setBackgroundResource(R.drawable.database_table_cell_border);
-            headerCell.setMinWidth(minWidth);
             headerCell.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
+            headerCell.setMaxLines(2);
+            headerCell.setSingleLine(false);
             headerCell.setTextAppearance(this, androidx.appcompat.R.style.TextAppearance_AppCompat_Body2);
             headerCell.setTypeface(headerCell.getTypeface(), android.graphics.Typeface.BOLD);
             tableHeaderRow.addView(headerCell);
         }
+    }
+
+    private List<Integer> computeColumnWidths(List<String> columnNames, List<DatabaseRowAdapter.DatabaseRow> rows) {
+        List<Integer> widths = new ArrayList<>();
+        if (columnNames == null || columnNames.isEmpty()) {
+            return widths;
+        }
+
+        float density = getResources().getDisplayMetrics().density;
+        int minWidth = (int) (120 * density);
+        int maxWidth = (int) (220 * density);
+        int horizontalPadding = (int) (16 * density);
+        TextPaint paint = new TextPaint();
+        paint.setTextSize(14 * density);
+
+        for (int columnIndex = 0; columnIndex < columnNames.size(); columnIndex++) {
+            float widestText = measureTextWidth(paint, columnNames.get(columnIndex));
+            for (DatabaseRowAdapter.DatabaseRow row : rows) {
+                if (row == null || row.getValues() == null || columnIndex >= row.getValues().size()) {
+                    continue;
+                }
+                widestText = Math.max(widestText, measureTextWidth(paint, row.getValues().get(columnIndex)));
+            }
+            int desiredWidth = (int) Math.ceil(widestText) + (horizontalPadding * 2);
+            widths.add(Math.max(minWidth, Math.min(maxWidth, desiredWidth)));
+        }
+        return widths;
+    }
+
+    private float measureTextWidth(TextPaint paint, String text) {
+        if (text == null || text.isEmpty()) {
+            return 0f;
+        }
+        return paint.measureText(text);
     }
 
     static class TableRows {

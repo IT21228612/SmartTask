@@ -17,7 +17,12 @@ import java.util.List;
 
 public class DatabaseRowAdapter extends RecyclerView.Adapter<DatabaseRowAdapter.RowViewHolder> {
 
+    private static final int CELL_HORIZONTAL_PADDING_DP = 16;
+    private static final int CELL_VERTICAL_PADDING_DP = 12;
+    private static final int CELL_MAX_LINES = 4;
+
     private final List<DatabaseRow> rows = new ArrayList<>();
+    private final List<Integer> columnWidthsPx = new ArrayList<>();
 
     @NonNull
     @Override
@@ -31,14 +36,23 @@ public class DatabaseRowAdapter extends RecyclerView.Adapter<DatabaseRowAdapter.
         DatabaseRow row = rows.get(position);
         holder.clearRows();
         Context context = holder.itemView.getContext();
-        for (String value : row.getValues()) {
-            holder.rowContainer.addView(buildCell(context, value, false));
+        List<String> values = row.getValues();
+        for (int i = 0; i < values.size(); i++) {
+            holder.rowContainer.addView(buildCell(context, values.get(i), getColumnWidth(i)));
         }
     }
 
     @Override
     public int getItemCount() {
         return rows.size();
+    }
+
+    public void setColumnWidths(List<Integer> widthsPx) {
+        columnWidthsPx.clear();
+        if (widthsPx != null) {
+            columnWidthsPx.addAll(widthsPx);
+        }
+        notifyDataSetChanged();
     }
 
     public void submitRows(List<DatabaseRow> newRows) {
@@ -49,26 +63,28 @@ public class DatabaseRowAdapter extends RecyclerView.Adapter<DatabaseRowAdapter.
         notifyDataSetChanged();
     }
 
-    private TextView buildCell(Context context, String text, boolean isHeader) {
+    private int getColumnWidth(int index) {
+        if (index >= 0 && index < columnWidthsPx.size()) {
+            return columnWidthsPx.get(index);
+        }
+        return LinearLayout.LayoutParams.WRAP_CONTENT;
+    }
+
+    private TextView buildCell(Context context, String text, int cellWidthPx) {
         TextView cell = new TextView(context);
         cell.setText(text);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                cellWidthPx,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         cell.setLayoutParams(layoutParams);
         cell.setBackgroundResource(R.drawable.database_table_cell_border);
-        int minWidth = (int) (160 * context.getResources().getDisplayMetrics().density);
-        cell.setMinWidth(minWidth);
-        int horizontalPadding = (int) (16 * context.getResources().getDisplayMetrics().density);
-        int verticalPadding = (int) (12 * context.getResources().getDisplayMetrics().density);
+        int horizontalPadding = (int) (CELL_HORIZONTAL_PADDING_DP * context.getResources().getDisplayMetrics().density);
+        int verticalPadding = (int) (CELL_VERTICAL_PADDING_DP * context.getResources().getDisplayMetrics().density);
         cell.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
-        cell.setTextAppearance(context, isHeader
-                ? androidx.appcompat.R.style.TextAppearance_AppCompat_Body2
-                : androidx.appcompat.R.style.TextAppearance_AppCompat_Body2);
-        if (isHeader) {
-            cell.setTypeface(cell.getTypeface(), android.graphics.Typeface.BOLD);
-        }
+        cell.setMaxLines(CELL_MAX_LINES);
+        cell.setSingleLine(false);
+        cell.setTextAppearance(context, androidx.appcompat.R.style.TextAppearance_AppCompat_Body2);
         return cell;
     }
 
