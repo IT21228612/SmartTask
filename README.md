@@ -101,51 +101,52 @@ Score = w1·Urgency + w2·ContextRelevance + w3·BehavioralAffinity - w4·Interr
 
 | Property | Description | All possible values |
 | --- | --- | --- |
-| `id` | Auto-generated primary key. | Auto-incrementing `long` (>= 1). |
-| `timestamp` | Capture time (epoch millis). | `long`. |
-| `timezoneId` | IANA time zone ID at capture. | Any non-empty string (e.g., `"UTC"`). |
-| `dayOfWeek` | Day-of-week value from the calendar. | `int` (calendar index). |
-| `minuteOfDay` | Minute within the day (0–1439). | `int`. |
-| `lat` / `lng` | Location coordinates. | `Double` or `null`. |
+| `id` | Auto-generated primary key. | Auto-incrementing `long` (`>= 1`). |
+| `timestamp` | Capture time (epoch millis). | Any `long` (default `0`). |
+| `timezoneId` | Time zone ID at capture. | Any non-null `String` (default `""`; usually IANA IDs like `"Asia/Kolkata"`, `"UTC"`). |
+| `dayOfWeek` | Day-of-week from `Calendar.DAY_OF_WEEK`. | `1..7` at runtime (`SUNDAY..SATURDAY`), or default `0` before collection. |
+| `minuteOfDay` | Minute offset within the day. | `0..1439` (default `0`). |
+| `lat` | Latitude from location collector. | `Double` or `null`. |
+| `lng` | Longitude from location collector. | `Double` or `null`. |
 | `accuracyM` | Location accuracy in meters. | `Float` or `null`. |
 | `speedMps` | Speed in meters/second. | `Float` or `null`. |
-| `bearingDeg` | Bearing in degrees. | `Float` or `null`. |
-| `isGeofenceHit` | Whether a geofence triggered the snapshot. | `true`/`false`. |
-| `geofenceId` | Identifier of the triggering geofence. | Any string or `null`. |
-| `placeLabel` | Human-friendly place label. | Any string or `null`. |
-| `locationSource` | Source of the location reading. | `"CACHED"`, `"FUSED"`, or `"UNKNOWN"`. |
-| `activityType` | Detected user activity type. | Activity strings (e.g., `"IN_VEHICLE"`, `"STILL"`, or `"UNKNOWN"`). |
-| `activityConfidence` | Confidence score for the detected activity. | `int` (0–100). |
-| `isMoving` | Whether motion was detected. | `true`/`false`. |
-| `stepsSinceLast` | Steps since the last snapshot. | `Integer` or `null`. |
-| `isInMeeting` | Whether the calendar shows a current meeting. | `true`/`false`. |
-| `currentEventId` | Current calendar event ID. | Any string or `null`. |
-| `currentEventTitle` | Title of the current calendar event. | Any string or `null`. |
-| `eventBusyStatus` | Busy/free status of the current event. | Any string or `null`. |
-| `minutesToNextEvent` | Minutes until the next calendar event. | `Integer` or `null`. |
-| `minutesLeftInEvent` | Minutes remaining in the current event. | `Integer` or `null`. |
-| `batteryPct` | Battery level percentage. | `int` (0–100). |
-| `isCharging` | Whether the device is charging. | `true`/`false`. |
-| `powerSaveMode` | Whether power-save mode is active. | `true`/`false`. |
-| `ringerMode` | Current device ringer mode. | `"SILENT"`, `"VIBRATE"`, or `"NORMAL"`. |
-| `doNotDisturbOn` | Whether DND is enabled. | `true`/`false`. |
-| `screenOn` | Whether the display is interactive. | `true`/`false`. |
-| `deviceUnlocked` | Whether the device is unlocked. | `true`/`false`. |
-| `appInForeground` | Whether SmartTask is in the foreground. | `true`/`false`. |
-| `connectivityType` | Active connectivity type. | `"WIFI"`, `"CELLULAR"`, or `"NONE"`. |
-| `isInternetAvailable` | Whether internet access is validated. | `true`/`false`. |
-| `isRoaming` | Whether the device is roaming. | `Boolean` (`true`/`false`) or `null`. |
-| `headphonesConnected` | Headphones presence. | `Boolean` (`true`/`false`) or `null`. |
-| `bluetoothConnected` | Whether a Bluetooth device is connected. | `Boolean` (`true`/`false`) or `null`. |
-| `wifiSsidHash` | Hashed SSID for privacy. | Any string or `null`. |
-| `noiseLevelDb` | Ambient noise level in decibels. | `Float` or `null`. |
-| `interruptionCostScore` | Derived interruption cost metric. | `float`. |
-| `receptivityScore` | Derived receptivity metric. | `float`. |
-| `contextLabel` | Derived label for the context. | Any string or `null`. |
-| `permissionState` | Permission health for the snapshot. | `"OK"` or descriptive strings. |
-| `dataQualityFlags` | Bitmask of data quality issues. | `int` (see `DataQualityFlags`). |
-| `anonymized` | Whether the snapshot is anonymized. | `true`/`false`. |
-| `sourceTrigger` | What triggered the capture. | Strings like `"APP_START"`, `"PERIODIC"`, `"GEOFENCE_ENTER"`, `"GEOFENCE_DWELL"`, `"GEOFENCE_EXIT"`, or `"UNKNOWN"`. |
+| `bearingDeg` | Bearing in degrees when reliable. | `Float` or `null`. |
+| `isGeofenceHit` | Whether a geofence event provided context. | `true` / `false` (default `false`). |
+| `geofenceId` | Triggering geofence request ID. | Any `String` or `null`. |
+| `placeLabel` | Place/task label resolved from geofence. | Any `String` or `null`. |
+| `locationSource` | Origin of chosen location sample. | `"FUSED"`, `"CACHED"`, or `"UNKNOWN"` (default `"UNKNOWN"`). |
+| `activityType` | Most probable detected activity. | `"IN_VEHICLE"`, `"ON_BICYCLE"`, `"WALKING"`, `"RUNNING"`, `"STILL"`, `"UNKNOWN"`, or `null`. |
+| `activityConfidence` | Activity confidence score. | `int` (typically `0..100`, default `0`). |
+| `isMoving` | Motion heuristic output. | `true` / `false` (default `false`). |
+| `stepsSinceLast` | Steps since previous snapshot. | `Integer` or `null` (currently not populated by collectors). |
+| `isInMeeting` | Whether user is currently in a busy calendar event. | `true` / `false` (default `false`). |
+| `currentEventId` | Active calendar event ID. | Any `String` or `null`. |
+| `currentEventTitle` | Active calendar event title (possibly hashed by privacy settings). | Any `String` or `null`. |
+| `eventBusyStatus` | Busy-state marker for current event. | `"BUSY"` or `null` (deriver also handles arbitrary non-`"FREE"` strings defensively). |
+| `minutesToNextEvent` | Minutes until next busy event. | `Integer` or `null`. |
+| `minutesLeftInEvent` | Minutes remaining in current busy event. | `Integer` or `null`. |
+| `batteryPct` | Battery percentage. | `int` (`0..100` when available; default `0`). |
+| `isCharging` | Charging state. | `true` / `false` (default `false`). |
+| `powerSaveMode` | Power saver status. | `true` / `false` (default `false`). |
+| `ringerMode` | Device ringer mode. | `"SILENT"`, `"VIBRATE"`, `"NORMAL"`, or `null`. |
+| `doNotDisturbOn` | DND state. | `true` / `false` (default `false`). |
+| `screenOn` | Whether device is interactive. | `true` / `false` (default `false`). |
+| `deviceUnlocked` | Device lock state inverse (`!isDeviceLocked`). | `true` / `false` (default `false`). |
+| `appInForeground` | Whether SmartTask is in foreground. | `true` / `false` (default `false`). |
+| `connectivityType` | Active transport bucket. | `"WIFI"`, `"CELLULAR"`, `"NONE"`, or `null`. |
+| `isInternetAvailable` | Network validation result. | `true` / `false` (default `false`). |
+| `isRoaming` | Telephony roaming state. | `Boolean` (`true` / `false`) or `null`. |
+| `headphonesConnected` | Wired headphones/headset detected. | `Boolean` (`true` / `false`) or `null`. |
+| `bluetoothConnected` | Bluetooth audio device detected. | `Boolean` (`true` / `false`) or `null`. |
+| `wifiSsidHash` | SSID value (hashed or raw, based on privacy settings). | Any `String` or `null`. |
+| `noiseLevelDb` | Ambient sound level. | `Float` or `null` (currently not populated by collectors). |
+| `interruptionCostScore` | Derived interruption score (`clamp[0,100]`). | `float` in `0.0..100.0`. |
+| `receptivityScore` | Derived receptivity score (`clamp[0,100]`). | `float` in `0.0..100.0`. |
+| `contextLabel` | Derived context classification. | `"MEETING"`, `"COMMUTING"`, `"LOW_BATTERY"`, `"NO_CONNECTIVITY"`, `"AVAILABLE_ACTIVE"`, `"IDLE_INACTIVE"`, `"EVENING_ACTIVE"`, `"DEFAULT"`, `"AT_<PLACE_LABEL>"`, or `null`. |
+| `permissionState` | Aggregate permission health string. | `"OK"` or comma-separated subset of `"LOCATION_DENIED"`, `"ACTIVITY_DENIED"`, `"CALENDAR_DENIED"`, `"BLUETOOTH_DENIED"`. |
+| `dataQualityFlags` | Bitmask of data quality issues. | `int` bitmask using: `LOW_ACCURACY=1`, `STALE_LOCATION=2`, `NO_LOCATION=4`, `NO_ACTIVITY=8`, `NO_CALENDAR=16`, `NO_CONNECTIVITY_INFO=32`; any bitwise OR combination including `0`. |
+| `anonymized` | Whether privacy anonymization was applied (for example SSID hashing). | `true` / `false` (default `false`). |
+| `sourceTrigger` | Snapshot trigger source. | `"APP_START"`, `"PERIODIC"`, `"GEOFENCE_ENTER"`, `"GEOFENCE_DWELL"`, `"GEOFENCE_EXIT"`, or fallback/default `"UNKNOWN"` (non-null string). |
 
 ---
 
