@@ -21,6 +21,7 @@ import com.smarttask.app.contextacquisition.collectors.TimeCollector;
 import com.smarttask.app.contextacquisition.db.ContextDatabase;
 import com.smarttask.app.contextacquisition.db.ContextSnapshot;
 import com.smarttask.app.contextacquisition.db.ContextSnapshotDao;
+import com.smarttask.app.contextacquisition.geofence.TaskGeofenceSyncManager;
 import com.smarttask.app.contextacquisition.utils.AppForegroundTracker;
 
 import java.util.ArrayList;
@@ -82,5 +83,10 @@ public class ContextEngine {
 
     public void registerBackgroundCollectors() {
         AppForegroundTracker.init((android.app.Application) appContext);
+        syncTaskGeofences();
+    }
+
+    public void syncTaskGeofences() {
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> new TaskGeofenceSyncManager(appContext).syncTaskGeofences());
     }
 }

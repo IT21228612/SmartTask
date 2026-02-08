@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.smarttask.app.R;
+import com.smarttask.app.contextacquisition.api.ContextEngine;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
@@ -251,6 +252,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 .setMessage(R.string.delete_task_message)
                 .setPositiveButton(R.string.delete, (dialog, which) -> {
                     taskDao.deleteTask(task);
+                    ContextEngine.getInstance(this).syncTaskGeofences();
                     refreshTasks();
                 })
                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> adapter.notifyItemChanged(position))

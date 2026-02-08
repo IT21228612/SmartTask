@@ -28,11 +28,28 @@ public class GeofenceRegistrar {
         if (!PermissionUtils.hasLocationPermission(appContext) || !PermissionUtils.hasBackgroundLocation(appContext)) {
             return;
         }
+        if (fences == null || fences.isEmpty()) {
+            return;
+        }
         GeofencingRequest request = new GeofencingRequest.Builder()
                 .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
                 .addGeofences(fences)
                 .build();
         client.addGeofences(request, getPendingIntent());
+    }
+
+    public void replaceGeofences(List<Geofence> fences) {
+        if (!PermissionUtils.hasLocationPermission(appContext) || !PermissionUtils.hasBackgroundLocation(appContext)) {
+            return;
+        }
+
+        client.removeGeofences(getPendingIntent())
+                .addOnCompleteListener(task -> {
+                    if (fences == null || fences.isEmpty()) {
+                        return;
+                    }
+                    registerGeofences(fences);
+                });
     }
 
     public PendingIntent getPendingIntent() {
