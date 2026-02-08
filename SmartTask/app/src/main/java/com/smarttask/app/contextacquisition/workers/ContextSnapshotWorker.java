@@ -37,7 +37,7 @@ public class ContextSnapshotWorker extends Worker {
         ContextEngine.getInstance(getApplicationContext())
                 .captureSnapshotNowSync("PERIODIC", null, captureStartedAtMs);
 
-        scheduleNextHourSlots(getApplicationContext(), captureStartedAtMs);
+        scheduleCurrentAndNextHourSlots(getApplicationContext(), captureStartedAtMs);
 
         long cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30);
         ContextDatabase.getInstance(getApplicationContext()).contextSnapshotDao().deleteOlderThan(cutoff);
@@ -45,22 +45,37 @@ public class ContextSnapshotWorker extends Worker {
     }
 
     public static void schedule(Context context) {
-        scheduleNextHourSlots(context.getApplicationContext(), System.currentTimeMillis());
+        scheduleCurrentAndNextHourSlots(context.getApplicationContext(), System.currentTimeMillis());
     }
 
-    private static void scheduleNextHourSlots(Context context, long referenceTimeMs) {
+    private static void scheduleCurrentAndNextHourSlots(Context context, long referenceTimeMs) {
         WorkManager workManager = WorkManager.getInstance(context.getApplicationContext());
-        Calendar nextHour = Calendar.getInstance();
-        nextHour.setTimeInMillis(referenceTimeMs);
-        nextHour.set(Calendar.SECOND, 0);
-        nextHour.set(Calendar.MILLISECOND, 0);
-        nextHour.set(Calendar.MINUTE, 0);
+        Calendar currentHour = Calendar.getInstance();
+        currentHour.setTimeInMillis(referenceTimeMs);
+        currentHour.set(Calendar.SECOND, 0);
+        currentHour.set(Calendar.MILLISECOND, 0);
+        currentHour.set(Calendar.MINUTE, 0);
+
+        Calendar nextHour = (Calendar) currentHour.clone();
         nextHour.add(Calendar.HOUR_OF_DAY, 1);
 
+        scheduleHourSlotsIfUpcoming(workManager, currentHour, referenceTimeMs);
+        scheduleHourSlotsIfUpcoming(workManager, nextHour, referenceTimeMs);
+    }
+
+    private static void scheduleHourSlotsIfUpcoming(WorkManager workManager, Calendar hourStart, long referenceTimeMs) {
+        long nowMs = System.currentTimeMillis();
+
         for (int minute : SNAPSHOT_MINUTES) {
-            Calendar slot = (Calendar) nextHour.clone();
+            Calendar slot = (Calendar) hourStart.clone();
             slot.set(Calendar.MINUTE, minute);
-            scheduleSlotIfMissing(workManager, slot.getTimeInMillis());
+            long slotTimeMs = slot.getTimeInMillis();
+
+            if (slotTimeMs <= referenceTimeMs || slotTimeMs <= nowMs) {
+                continue;
+            }
+
+            scheduleSlotIfMissing(workManager, slotTimeMs);
         }
     }
 
