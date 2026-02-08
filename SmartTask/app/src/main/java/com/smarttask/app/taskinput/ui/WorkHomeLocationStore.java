@@ -1,99 +1,87 @@
 package com.smarttask.app.taskinput.ui;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.datastore.preferences.core.MutablePreferences;
-import androidx.datastore.preferences.core.Preferences;
-import androidx.datastore.preferences.core.PreferencesKeys;
-import androidx.datastore.rxjava3.RxDataStore;
-import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder;
+
+import java.util.Locale;
 
 import io.reactivex.rxjava3.core.Single;
 
 public class WorkHomeLocationStore {
 
-    private static final String DATASTORE_FILE_NAME = "app_settings.preferences_pb";
+    private static final String PREFERENCES_FILE_NAME = "app_settings";
     private static final String TYPE_WORK = "Work";
-    private static final Object DATA_STORE_LOCK = new Object();
 
-    @Nullable
-    private static volatile RxDataStore<Preferences> sharedDataStore;
-
-    private final RxDataStore<Preferences> dataStore;
+    private final SharedPreferences sharedPreferences;
 
     public WorkHomeLocationStore(@NonNull Context context) {
         Context appContext = context.getApplicationContext();
-        dataStore = getOrCreateDataStore(appContext);
-    }
-
-    private static RxDataStore<Preferences> getOrCreateDataStore(@NonNull Context context) {
-        RxDataStore<Preferences> local = sharedDataStore;
-        if (local != null) {
-            return local;
-        }
-        synchronized (DATA_STORE_LOCK) {
-            if (sharedDataStore == null) {
-                sharedDataStore = new RxPreferenceDataStoreBuilder(context, DATASTORE_FILE_NAME).build();
-            }
-            return sharedDataStore;
-        }
+        sharedPreferences = appContext.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE);
     }
 
     public Single<WorkHomeLocation> getLocation(@NonNull String type) {
-        Preferences.Key<Double> latKey = getLatKey(type);
-        Preferences.Key<Double> lngKey = getLngKey(type);
-        Preferences.Key<String> addressKey = getAddressKey(type);
+        return Single.fromCallable(() -> {
+            String keyType = normalizeType(type);
+            String latKey = getLatKey(keyType);
+            String lngKey = getLngKey(keyType);
+            String addressKey = getAddressKey(keyType);
 
-        return dataStore.data()
-                .firstOrError()
-                .map(preferences -> {
-                    Double lat = preferences.get(latKey);
-                    Double lng = preferences.get(lngKey);
-                    String address = preferences.get(addressKey);
-                    return new WorkHomeLocation(lat, lng, address);
-                });
-    }
+            Double lat = sharedPreferences.contains(latKey)
+                    ? Double.longBitsToDouble(sharedPreferences.getLong(latKey, 0L))
+                    : null;
+            Double lng = sharedPreferences.contains(lngKey)
+                    ? Double.longBitsToDouble(sharedPreferences.getLong(lngKey, 0L))
+                    : null;
+            String address = sharedPreferences.getString(addressKey, null);
 
-    public Single<Preferences> saveLocation(@NonNull String type,
-                                            double lat,
-                                            double lng,
-                                            @Nullable String address) {
-        Preferences.Key<Double> latKey = getLatKey(type);
-        Preferences.Key<Double> lngKey = getLngKey(type);
-        Preferences.Key<String> addressKey = getAddressKey(type);
-
-        return dataStore.updateDataAsync(preferencesIn -> {
-            MutablePreferences mutablePreferences = preferencesIn.toMutablePreferences();
-            mutablePreferences.set(latKey, lat);
-            mutablePreferences.set(lngKey, lng);
-            if (address == null || address.trim().isEmpty()) {
-                mutablePreferences.remove(addressKey);
-            } else {
-                mutablePreferences.set(addressKey, address);
-            }
-            return Single.just(mutablePreferences);
+            return new WorkHomeLocation(lat, lng, address);
         });
     }
 
-    private Preferences.Key<Double> getLatKey(String type) {
-        return PreferencesKeys.doubleKey("location_" + normalizeType(type) + "_lat");
+    public Single<Boolean> saveLocation(@NonNull String type,
+                                        double lat,
+                                        double lng,
+                                        @Nullable String address) {
+        return Single.fromCallable(() -> {
+            String keyType = normalizeType(type);
+            String latKey = getLatKey(keyType);
+            String lngKey = getLngKey(keyType);
+            String addressKey = getAddressKey(keyType);
+
+            SharedPreferences.Editor editor = sharedPreferences.edit()
+                    .putLong(latKey, Double.doubleToRawLongBits(lat))
+                    .putLong(lngKey, Double.doubleToRawLongBits(lng));
+
+            if (address == null || address.trim().isEmpty()) {
+                editor.remove(addressKey);
+            } else {
+                editor.putString(addressKey, address);
+            }
+
+            return editor.commit();
+        });
     }
 
-    private Preferences.Key<Double> getLngKey(String type) {
-        return PreferencesKeys.doubleKey("location_" + normalizeType(type) + "_lng");
+    private String getLatKey(String normalizedType) {
+        return "location_" + normalizedType + "_lat";
     }
 
-    private Preferences.Key<String> getAddressKey(String type) {
-        return PreferencesKeys.stringKey("location_" + normalizeType(type) + "_address");
+    private String getLngKey(String normalizedType) {
+        return "location_" + normalizedType + "_lng";
+    }
+
+    private String getAddressKey(String normalizedType) {
+        return "location_" + normalizedType + "_address";
     }
 
     private String normalizeType(String type) {
         if (type == null) {
-            return TYPE_WORK.toLowerCase();
+            return TYPE_WORK.toLowerCase(Locale.US);
         }
-        return type.toLowerCase();
+        return type.toLowerCase(Locale.US);
     }
 
     public static final class WorkHomeLocation {
