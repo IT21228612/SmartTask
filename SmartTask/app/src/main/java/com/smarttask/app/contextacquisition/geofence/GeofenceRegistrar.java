@@ -16,6 +16,8 @@ import java.util.List;
 
 public class GeofenceRegistrar {
 
+    private static final int LOITERING_DELAY_MILLIS = 10 * 60 * 1000;
+
     private final Context appContext;
     private final GeofencingClient client;
 
@@ -65,7 +67,12 @@ public class GeofenceRegistrar {
         return new Geofence.Builder()
                 .setRequestId(id)
                 .setCircularRegion(lat, lng, radiusMeters)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .setTransitionTypes(
+                        Geofence.GEOFENCE_TRANSITION_ENTER
+                                | Geofence.GEOFENCE_TRANSITION_DWELL
+                                | Geofence.GEOFENCE_TRANSITION_EXIT
+                )
+                .setLoiteringDelay(LOITERING_DELAY_MILLIS)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .build();
     }
