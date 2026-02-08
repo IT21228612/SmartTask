@@ -1,6 +1,7 @@
 package com.smarttask.app.contextacquisition.geofence;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
 import com.smarttask.app.taskinput.db.Task;
@@ -13,6 +14,8 @@ import java.util.List;
 public class TaskGeofenceSyncManager {
 
     private static final String TASK_GEOFENCE_PREFIX = "task_";
+
+    private static final String TAG = "TaskGeofenceSyncManager";
 
     private final TaskDao taskDao;
     private final GeofenceRegistrar geofenceRegistrar;
@@ -55,9 +58,12 @@ public class TaskGeofenceSyncManager {
         Double lat = task.getLocationLat();
         Double lng = task.getLocationLng();
         Float radiusM = task.getLocationRadius();
+        String taskTitle = task.getTitle();
+
         if (lat == null || lng == null || radiusM == null || radiusM <= 0f) {
             return null;
         }
+        Log.d(TAG, "geofence added | Task : " + taskTitle);
         return GeofenceRegistrar.buildGeofence(buildTaskGeofenceId(task.getId()), lat, lng, radiusM);
     }
 }
