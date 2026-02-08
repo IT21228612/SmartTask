@@ -65,10 +65,16 @@ public class ContextEngine {
     }
 
     public ContextSnapshot captureSnapshotNowSync(String sourceTrigger, @Nullable Intent triggerIntent) {
-        long now = System.currentTimeMillis();
-        CollectorContext collectorContext = new CollectorContext(appContext, sourceTrigger, triggerIntent, now);
+        return captureSnapshotNowSync(sourceTrigger, triggerIntent, System.currentTimeMillis());
+    }
+
+    public ContextSnapshot captureSnapshotNowSync(String sourceTrigger,
+                                                  @Nullable Intent triggerIntent,
+                                                  long captureStartedAtMs) {
+        CollectorContext collectorContext = new CollectorContext(appContext, sourceTrigger, triggerIntent, captureStartedAtMs);
         ContextSnapshot snapshot = new ContextSnapshot();
         snapshot.sourceTrigger = sourceTrigger;
+        snapshot.timestamp = captureStartedAtMs;
         for (ContextCollector collector : collectors) {
             collector.collect(snapshot, collectorContext);
         }
