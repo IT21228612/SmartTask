@@ -53,7 +53,7 @@ public class ContextMatchingRunner {
         for (Task task : activeTasks) {
             TaskContextMatch previous = matchDao.getLatestForTask(task.getId());
             MatchResult result = matcher.match(snapshot, task, now, previous);
-            TaskContextMatch dbMatch = toEntity(task.getId(), snapshot.id, now, result);
+            TaskContextMatch dbMatch = toEntity(task.getId(), snapshot, now, result);
             toPersist.add(dbMatch);
 
             if ("IN_APP".equals(result.triggerType) || "NOTIFICATION".equals(result.triggerType)) {
@@ -96,16 +96,17 @@ public class ContextMatchingRunner {
         return new ArrayList<>(unique.values());
     }
 
-    private TaskContextMatch toEntity(long taskId, long snapshotId, long now, MatchResult result) {
+    private TaskContextMatch toEntity(long taskId, ContextSnapshot snapshot, long now, MatchResult result) {
         TaskContextMatch match = new TaskContextMatch();
         match.taskId = taskId;
-        match.snapshotId = snapshotId;
+        match.snapshotId = snapshot.id;
         match.matchedAt = now;
         match.relevanceScore = result.relevanceScore;
         match.matchReasons = join(result.reasons);
         match.shouldTriggerNow = result.shouldTriggerNow;
         match.cooldownUntil = result.cooldownUntil;
         match.triggerType = result.triggerType;
+        match.contextSnapshotTrigger = snapshot.sourceTrigger;
         match.blockedBy = join(result.blockedBy);
         return match;
     }

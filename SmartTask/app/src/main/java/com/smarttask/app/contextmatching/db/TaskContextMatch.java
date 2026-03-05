@@ -39,5 +39,8 @@ public class TaskContextMatch {
     public String triggerType;
 
     @Nullable
+    public String contextSnapshotTrigger;
+
+    @Nullable
     public String blockedBy;
 }
