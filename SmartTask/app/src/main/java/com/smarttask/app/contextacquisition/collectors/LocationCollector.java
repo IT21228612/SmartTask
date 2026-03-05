@@ -20,8 +20,8 @@ public class LocationCollector implements ContextCollector {
     private static final String PERIODIC_TRIGGER = "PERIODIC";
 
     private static final long STALE_THRESHOLD_MS = TimeUnit.MINUTES.toMillis(3);
-    private static final long LAST_LOCATION_TIMEOUT_SECONDS = 4L;
-    private static final long CURRENT_LOCATION_TIMEOUT_SECONDS = 6L;
+    private static final long LAST_LOCATION_TIMEOUT_SECONDS = 5L;
+    private static final long CURRENT_LOCATION_TIMEOUT_SECONDS = 10L;
     private static final float MIN_BEARING_SPEED_MPS = 0.5f;
 
     @Override
