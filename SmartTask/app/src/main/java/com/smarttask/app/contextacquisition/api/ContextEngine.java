@@ -22,6 +22,7 @@ import com.smarttask.app.contextacquisition.db.ContextDatabase;
 import com.smarttask.app.contextacquisition.db.ContextSnapshot;
 import com.smarttask.app.contextacquisition.db.ContextSnapshotDao;
 import com.smarttask.app.contextacquisition.geofence.TaskGeofenceSyncManager;
+import com.smarttask.app.contextmatching.workers.ContextMatchWorker;
 import com.smarttask.app.contextacquisition.utils.AppForegroundTracker;
 
 import java.util.ArrayList;
@@ -79,7 +80,8 @@ public class ContextEngine {
             collector.collect(snapshot, collectorContext);
         }
         deriver.derive(snapshot);
-        dao.insert(snapshot);
+        snapshot.id = dao.insert(snapshot);
+        ContextMatchWorker.enqueue(appContext, snapshot.id);
         return snapshot;
     }
 

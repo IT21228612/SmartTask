@@ -6,12 +6,17 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {Task.class}, version = 3, exportSchema = false)
+import com.smarttask.app.contextmatching.db.TaskContextMatch;
+import com.smarttask.app.contextmatching.db.TaskContextMatchDao;
+
+@Database(entities = {Task.class, TaskContextMatch.class}, version = 4, exportSchema = false)
 public abstract class TaskDatabase extends RoomDatabase {
 
     private static volatile TaskDatabase INSTANCE;
 
     public abstract TaskDao taskDao();
+
+    public abstract TaskContextMatchDao taskContextMatchDao();
 
     public static TaskDatabase getInstance(Context context) {
         if (INSTANCE == null) {

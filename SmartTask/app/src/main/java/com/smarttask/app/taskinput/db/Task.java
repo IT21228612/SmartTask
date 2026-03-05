@@ -4,7 +4,13 @@ import androidx.annotation.Nullable;
 import androidx.room.*;
 
 
-@Entity(tableName = "tasks")
+@Entity(
+        tableName = "tasks",
+        indices = {
+                @Index(value = {"completed", "archived", "snoozeUntil"}),
+                @Index(value = {"locationLat", "locationLng"})
+        }
+)
 public class Task {
 
     @PrimaryKey(autoGenerate = true)
