@@ -1,17 +1,10 @@
 package com.smarttask.app.contextacquisition.collectors;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Looper;
 import android.util.Log;
 
-import androidx.core.content.ContextCompat;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.Tasks;
@@ -24,8 +17,11 @@ import java.util.concurrent.TimeUnit;
 public class LocationCollector implements ContextCollector {
 
     private static final String TAG = "contextCollector";
+    private static final String PERIODIC_TRIGGER = "PERIODIC";
 
     private static final long STALE_THRESHOLD_MS = TimeUnit.MINUTES.toMillis(3);
+    private static final long LAST_LOCATION_TIMEOUT_SECONDS = 4L;
+    private static final long CURRENT_LOCATION_TIMEOUT_SECONDS = 6L;
     private static final float MIN_BEARING_SPEED_MPS = 0.5f;
 
     @Override
@@ -39,16 +35,33 @@ public class LocationCollector implements ContextCollector {
             Log.d(TAG, "cannot get bearingDeg | reason : location permission denied");
             return;
         }
+        if (PERIODIC_TRIGGER.equals(ctx.sourceTrigger) && !PermissionUtils.hasBackgroundLocation(ctx.appContext)) {
+            snapshot.dataQualityFlags |= DataQualityFlags.NO_LOCATION;
+            snapshot.locationSource = "UNKNOWN";
+            Log.d(TAG, "cannot get lat | reason : background location permission denied");
+            Log.d(TAG, "cannot get lng | reason : background location permission denied");
+            Log.d(TAG, "cannot get accuracyM | reason : background location permission denied");
+            Log.d(TAG, "cannot get speedMps | reason : background location permission denied");
+            Log.d(TAG, "cannot get bearingDeg | reason : background location permission denied");
+            return;
+        }
+
         FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(ctx.appContext);
         Location location = getLastKnownLocation(client);
         boolean usedStaleCachedLocation = false;
         if (location == null) {
-            location = getCurrentLocation(client);
+            location = getCurrentLocation(client, Priority.PRIORITY_BALANCED_POWER_ACCURACY);
+            if (location == null) {
+                location = getCurrentLocation(client, Priority.PRIORITY_HIGH_ACCURACY);
+            }
         } else {
             long ageMs = Math.abs(System.currentTimeMillis() - location.getTime());
             boolean stale = ageMs > STALE_THRESHOLD_MS;
             if (stale) {
-                Location currentLocation = getCurrentLocation(client);
+                Location currentLocation = getCurrentLocation(client, Priority.PRIORITY_BALANCED_POWER_ACCURACY);
+                if (currentLocation == null) {
+                    currentLocation = getCurrentLocation(client, Priority.PRIORITY_HIGH_ACCURACY);
+                }
                 if (currentLocation != null) {
                     location = currentLocation;
                 } else {
@@ -88,7 +101,7 @@ public class LocationCollector implements ContextCollector {
     @SuppressLint("MissingPermission")
     private Location getLastKnownLocation(FusedLocationProviderClient client) {
         try {
-            return Tasks.await(client.getLastLocation(), 2, TimeUnit.SECONDS);
+            return Tasks.await(client.getLastLocation(), LAST_LOCATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (Exception e) {
             Log.d(TAG, "cannot get lat | reason : getLastLocation failed " + e.getMessage());
             return null;
@@ -96,12 +109,9 @@ public class LocationCollector implements ContextCollector {
     }
 
     @SuppressLint("MissingPermission")
-    private Location getCurrentLocation(FusedLocationProviderClient client) {
+    private Location getCurrentLocation(FusedLocationProviderClient client, int priority) {
         try {
-            LocationRequest request = LocationRequest.create()
-                    .setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
-                    .setInterval(0);
-            return Tasks.await(client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null), 3, TimeUnit.SECONDS);
+            return Tasks.await(client.getCurrentLocation(priority, null), CURRENT_LOCATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (Exception e) {
             Log.d(TAG, "cannot get lat | reason : getCurrentLocation failed " + e.getMessage());
             return null;

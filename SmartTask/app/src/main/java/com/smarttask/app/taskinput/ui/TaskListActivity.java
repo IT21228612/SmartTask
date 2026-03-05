@@ -1,9 +1,11 @@
 package com.smarttask.app.taskinput.ui;
 
+import android.Manifest;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -43,10 +45,28 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             result -> refreshTasks()
     );
 
+    private final ActivityResultLauncher<String> locationPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> {
+                if (granted) {
+                    requestBackgroundLocationPermissionIfNeeded();
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<String> backgroundLocationPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> {
+                // No-op: periodic snapshots already handle denied background permission with NO_LOCATION.
+            }
+    );
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_list);
+
+        requestLocationPermissionsForBackgroundSnapshots();
 
         taskDao = TaskDatabase.getInstance(this).taskDao();
 
@@ -172,6 +192,32 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
     protected void onResume() {
         super.onResume();
         refreshTasks();
+    }
+
+    private void requestLocationPermissionsForBackgroundSnapshots() {
+        if (!hasForegroundLocationPermission()) {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+            return;
+        }
+        requestBackgroundLocationPermissionIfNeeded();
+    }
+
+    private void requestBackgroundLocationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        backgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+    }
+
+    private boolean hasForegroundLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == android.content.pm.PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == android.content.pm.PackageManager.PERMISSION_GRANTED;
     }
 
     private void refreshTasks() {
