@@ -30,6 +30,19 @@ public interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :taskId LIMIT 1")
     Task getTaskById(long taskId);
 
+    @Query("SELECT * FROM tasks WHERE completed = 0 AND archived = 0 " +
+            "AND (snoozeUntil IS NULL OR snoozeUntil <= :now) " +
+            "AND notificationsEnabled = 1")
+    List<Task> getActiveTasksForMatching(long now);
+
+    @Query("SELECT * FROM tasks WHERE completed = 0 AND archived = 0 " +
+            "AND (snoozeUntil IS NULL OR snoozeUntil <= :now) " +
+            "AND notificationsEnabled = 1 " +
+            "AND locationLat IS NOT NULL AND locationLng IS NOT NULL " +
+            "AND locationLat BETWEEN :minLat AND :maxLat " +
+            "AND locationLng BETWEEN :minLng AND :maxLng")
+    List<Task> getActiveTasksInBoundingBox(long now, double minLat, double maxLat, double minLng, double maxLng);
+
     @Query("SELECT MAX(displayOrder) FROM tasks")
     Long getMaxDisplayOrder();
 
