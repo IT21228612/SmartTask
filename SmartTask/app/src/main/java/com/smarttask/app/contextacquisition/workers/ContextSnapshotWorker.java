@@ -33,7 +33,8 @@ public class ContextSnapshotWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        long captureStartedAtMs = getInputData().getLong(INPUT_CAPTURE_STARTED_AT_MS, System.currentTimeMillis());
+        // Persist periodic snapshots using the actual run time (not the planned slot time).
+        long captureStartedAtMs = System.currentTimeMillis();
         ContextEngine.getInstance(getApplicationContext())
                 .captureSnapshotNowSync("PERIODIC", null, captureStartedAtMs);
 
