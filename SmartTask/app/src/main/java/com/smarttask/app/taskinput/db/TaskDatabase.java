@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import com.smarttask.app.contextmatching.db.TaskContextMatch;
 import com.smarttask.app.contextmatching.db.TaskContextMatchDao;
 
-@Database(entities = {Task.class, TaskContextMatch.class}, version = 4, exportSchema = false)
+@Database(entities = {Task.class, TaskContextMatch.class}, version = 5, exportSchema = false)
 public abstract class TaskDatabase extends RoomDatabase {
 
     private static volatile TaskDatabase INSTANCE;
