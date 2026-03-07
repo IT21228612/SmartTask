@@ -162,6 +162,7 @@ public class DatabaseViewerActivity extends AppCompatActivity {
         boolean hasDateHint = normalized.contains("time")
                 || normalized.contains("date")
                 || normalized.contains("timestamp")
+                || normalized.contains("until")
                 || normalized.endsWith("at");
         boolean looksLikeMillis = value >= 100000000000L;
         return hasDateHint && looksLikeMillis;
