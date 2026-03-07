@@ -10,7 +10,12 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.smarttask.app.contextmatching.logic.ContextMatchingRunner;
+import com.smarttask.app.contextmatching.model.TriggerCandidate;
+import com.smarttask.app.notifications.service.NotificationManager;
+import com.smarttask.app.prioritization.logic.PrioritizedTask;
 import com.smarttask.app.prioritization.logic.TaskPrioritizationRunner;
+
+import java.util.List;
 
 public class ContextMatchWorker extends Worker {
 
@@ -29,8 +34,10 @@ public class ContextMatchWorker extends Worker {
             return Result.failure();
         }
 
-        new ContextMatchingRunner(getApplicationContext()).runForSnapshot(getApplicationContext(), snapshotId);
-        new TaskPrioritizationRunner(getApplicationContext()).run(snapshotId);
+        List<TriggerCandidate> triggerCandidates = new ContextMatchingRunner(getApplicationContext())
+                .runForSnapshot(getApplicationContext(), snapshotId);
+        List<PrioritizedTask> prioritized = new TaskPrioritizationRunner(getApplicationContext()).run(snapshotId);
+        new NotificationManager(getApplicationContext()).dispatch(snapshotId, triggerCandidates, prioritized);
         return Result.success();
     }
 
