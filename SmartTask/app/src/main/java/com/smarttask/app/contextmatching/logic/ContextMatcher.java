@@ -129,15 +129,15 @@ public class ContextMatcher {
 
     private float scorePriority(Task task, List<String> reasons) {
         int priority = task.getPriority();
-        if (priority >= 9) {
+        if (priority >= 9 || priority == 2) {
             reasons.add("PRIORITY_CRITICAL");
             return 10f;
         }
-        if (priority >= 7) {
+        if (priority >= 7 || priority == 1) {
             reasons.add("PRIORITY_HIGH");
             return 7f;
         }
-        if (priority >= 5) {
+        if (priority >= 5 || priority == 0) {
             reasons.add("PRIORITY_MEDIUM");
             return 4f;
         }
