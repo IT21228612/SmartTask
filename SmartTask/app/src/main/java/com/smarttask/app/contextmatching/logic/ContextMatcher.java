@@ -26,9 +26,11 @@ public class ContextMatcher {
 
         score += scoreLocation(snapshot, task, reasons);
         score += scoreTime(task, nowMs, reasons);
+        score += scorePriority(task, reasons);
         score += scoreCalendar(snapshot, task, nowMs, reasons, blockedBy);
         score += scoreActivity(snapshot, task, nowMs, blockedBy);
         score += scoreDeviceState(snapshot, task, nowMs, blockedBy);
+        score += scoreReadiness(snapshot, reasons);
 
         float clamped = clamp(score, 0f, 100f);
 
@@ -86,20 +88,26 @@ public class ContextMatcher {
         if (task.getDueAt() != null) {
             long minsToDue = (task.getDueAt() - nowMs) / 60_000L;
             if (minsToDue < 0) {
-                total += 35f;
+                total += 50f;
                 reasons.add("OVERDUE");
             } else if (minsToDue <= 60) {
-                total += 30f;
+                total += 45f;
                 reasons.add("DUE_WITHIN_1H");
             } else if (minsToDue <= 180) {
-                total += 22f;
+                total += 40f;
                 reasons.add("DUE_WITHIN_3H");
             } else if (minsToDue <= 1440) {
-                total += 15f;
+                total += 35f;
                 reasons.add("DUE_WITHIN_24H");
+            } else if (minsToDue <= 2880) {
+                total += 10f;
+                reasons.add("DUE_WITHIN_2D");
             } else if (minsToDue <= 4320) {
                 total += 8f;
                 reasons.add("DUE_WITHIN_3D");
+            } else if (minsToDue <= 10080) {
+                total += 3f;
+                reasons.add("DUE_WITHIN_7D");
             }
         }
 
@@ -113,6 +121,45 @@ public class ContextMatcher {
                 total += 5f;
                 reasons.add("WINDOW_SOON");
             }
+        }
+
+        return total;
+    }
+
+
+    private float scorePriority(Task task, List<String> reasons) {
+        int priority = task.getPriority();
+        if (priority >= 9) {
+            reasons.add("PRIORITY_CRITICAL");
+            return 10f;
+        }
+        if (priority >= 7) {
+            reasons.add("PRIORITY_HIGH");
+            return 7f;
+        }
+        if (priority >= 5) {
+            reasons.add("PRIORITY_MEDIUM");
+            return 4f;
+        }
+        return 0f;
+    }
+
+    private float scoreReadiness(ContextSnapshot snapshot, List<String> reasons) {
+        float total = 0f;
+
+        if (snapshot.isGeofenceHit) {
+            total += 8f;
+            reasons.add("GEOFENCE_HIT");
+        }
+        if (snapshot.receptivityScore > 0f) {
+            float receptivityBoost = clamp(snapshot.receptivityScore, 0f, 10f);
+            total += receptivityBoost;
+            reasons.add("HIGH_RECEPTIVITY");
+        }
+        if (snapshot.interruptionCostScore > 0f) {
+            float interruptionPenalty = clamp(snapshot.interruptionCostScore, 0f, 8f);
+            total -= interruptionPenalty;
+            reasons.add("INTERRUPTION_COST");
         }
 
         return total;
