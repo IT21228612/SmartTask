@@ -62,7 +62,9 @@ public class ContextMatchingRunner {
                         snapshot.id,
                         result.relevanceScore,
                         result.reasons,
-                        result.blockedBy
+                        result.blockedBy,
+                        result.triggerType,
+                        result.shouldTriggerNow
                 ));
             }
         }

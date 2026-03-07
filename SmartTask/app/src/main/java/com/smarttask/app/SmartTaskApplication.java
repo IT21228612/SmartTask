@@ -9,6 +9,7 @@ import android.util.Log;
 import com.google.android.libraries.places.api.Places;
 import com.smarttask.app.contextacquisition.api.ContextEngine;
 import com.smarttask.app.contextacquisition.workers.ContextSnapshotWorker;
+import com.smarttask.app.notifications.service.NotificationManager;
 
 public class SmartTaskApplication extends Application {
     private static final String TAG = "SmartTaskApplication";
@@ -17,6 +18,7 @@ public class SmartTaskApplication extends Application {
     public void onCreate() {
         super.onCreate();
         initializePlacesSdk();
+        NotificationManager.createChannelIfNeeded(this);
         ContextEngine contextEngine = ContextEngine.getInstance(this);
         contextEngine.registerBackgroundCollectors();
         contextEngine.captureSnapshot("APP_START", null);

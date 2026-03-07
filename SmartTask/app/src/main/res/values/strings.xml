@@ -84,4 +84,14 @@
     <string name="work_home_location_selected">%1$s: %2$s</string>
     <string name="work_home_location_load_failed">Could not load saved location</string>
     <string name="work_home_location_save_failed">Could not save location</string>
+    <string name="notification_channel_name">Smart reminders</string>
+    <string name="notification_channel_description">Context-aware task reminders from SmartTask</string>
+    <string name="notification_reason_default">Context match available</string>
+    <string name="notification_content_template">Score %1$s • %2$s</string>
+    <string name="notification_big_text_template">Priority score: %1$s
+Context relevance: %2$s
+Signals: %3$s</string>
+    <string name="notification_action_done">Done</string>
+    <string name="notification_action_snooze">Snooze</string>
+    <string name="notification_action_postpone">Postpone</string>
 </resources>
