@@ -10,6 +10,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.smarttask.app.contextmatching.logic.ContextMatchingRunner;
+import com.smarttask.app.prioritization.logic.TaskPrioritizationRunner;
 
 public class ContextMatchWorker extends Worker {
 
@@ -29,6 +30,7 @@ public class ContextMatchWorker extends Worker {
         }
 
         new ContextMatchingRunner(getApplicationContext()).runForSnapshot(getApplicationContext(), snapshotId);
+        new TaskPrioritizationRunner(getApplicationContext()).run(snapshotId);
         return Result.success();
     }
 

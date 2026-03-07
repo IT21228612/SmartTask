@@ -35,6 +35,9 @@ public interface TaskDao {
             "AND notificationsEnabled = 1")
     List<Task> getActiveTasksForMatching(long now);
 
+    @Query("SELECT * FROM tasks WHERE completed = 0 AND archived = 0 ORDER BY displayOrder ASC, updatedAt DESC")
+    List<Task> getActiveIncompleteTasksForPrioritization();
+
     @Query("SELECT * FROM tasks WHERE completed = 0 AND archived = 0 " +
             "AND (snoozeUntil IS NULL OR snoozeUntil <= :now) " +
             "AND notificationsEnabled = 1 " +
@@ -48,4 +51,7 @@ public interface TaskDao {
 
     @Query("SELECT MIN(displayOrder) FROM tasks")
     Long getMinDisplayOrder();
+
+    @Update
+    void updateTasks(List<Task> tasks);
 }
