@@ -23,6 +23,8 @@ public class ParsedVoiceTask {
     @Nullable
     private Boolean enableNotifications;
     private String rawTranscript;
+    @Nullable
+    private String extractedJson;
 
     public ParsedVoiceTask(String rawTranscript) {
         this.rawTranscript = rawTranscript;
@@ -116,4 +118,14 @@ public class ParsedVoiceTask {
     public void setRawTranscript(String rawTranscript) {
         this.rawTranscript = rawTranscript;
     }
+
+    @Nullable
+    public String getExtractedJson() {
+        return extractedJson;
+    }
+
+    public void setExtractedJson(@Nullable String extractedJson) {
+        this.extractedJson = extractedJson;
+    }
 }
+
