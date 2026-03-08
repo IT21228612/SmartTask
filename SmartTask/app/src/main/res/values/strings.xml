@@ -55,6 +55,7 @@
     <string name="validation_error_title">Please fix these before saving</string>
     <string name="error_preferred_end_before_start">Preferred end time cannot be before the preferred start time.</string>
     <string name="error_due_before_preferred_end">Due date cannot be before the preferred end time.</string>
+    <string name="error_estimated_duration_mismatch">Estimated duration must match preferred start and end times.</string>
     <string name="menu_user_profile">User</string>
     <string name="menu_sample_one">Sample item 1</string>
     <string name="menu_sample_two">Sample item 2</string>
@@ -94,4 +95,10 @@ Signals: %3$s</string>
     <string name="notification_action_done">Done</string>
     <string name="notification_action_snooze">Snooze</string>
     <string name="notification_action_postpone">Postpone</string>
+    <string name="voice_command_task">Create task by voice</string>
+    <string name="voice_listening">Listening…</string>
+    <string name="voice_processing">Processing voice command…</string>
+    <string name="voice_not_supported">Voice input is not available on this device.</string>
+    <string name="voice_permission_required">Microphone permission is required for voice command.</string>
+    <string name="voice_fallback_used">Couldn't parse voice command, opened fallback task draft.</string>
 </resources>

@@ -1,16 +1,20 @@
 package com.smarttask.app.taskinput.ui;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -30,8 +34,15 @@ import com.smarttask.app.contextacquisition.api.ContextEngine;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
+import com.smarttask.app.voiceCommandTaskCreation.OpenAiVoiceTaskParser;
+import com.smarttask.app.voiceCommandTaskCreation.ParsedVoiceTask;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class TaskListActivity extends AppCompatActivity implements TaskAdapter.TaskClickListener {
 
@@ -39,6 +50,8 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
     private TaskAdapter adapter;
     private TextView emptyView;
     private boolean isDragging = false;
+    private final ExecutorService voiceExecutor = Executors.newSingleThreadExecutor();
+    private final OpenAiVoiceTaskParser voiceTaskParser = new OpenAiVoiceTaskParser();
 
     private final ActivityResultLauncher<Intent> taskLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -61,6 +74,31 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             }
     );
 
+    private final ActivityResultLauncher<String> recordAudioPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> {
+                if (granted) {
+                    launchSpeechRecognizer();
+                } else {
+                    Toast.makeText(this, R.string.voice_permission_required, Toast.LENGTH_SHORT).show();
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<Intent> voiceRecognizerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                    return;
+                }
+                ArrayList<String> textResults = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (textResults == null || textResults.isEmpty()) {
+                    return;
+                }
+                handleVoiceTranscript(textResults.get(0));
+            }
+    );
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +111,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         RecyclerView recyclerView = findViewById(R.id.task_recycler_view);
         emptyView = findViewById(R.id.empty_view);
         FloatingActionButton fab = findViewById(R.id.add_task_button);
+        FloatingActionButton voiceFab = findViewById(R.id.voice_task_button);
         MaterialToolbar toolbar = findViewById(R.id.task_list_toolbar);
 
         toolbar.setNavigationOnClickListener(this::showTopMenu);
@@ -184,6 +223,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         new ItemTouchHelper(swipeToActionCallback).attachToRecyclerView(recyclerView);
 
         fab.setOnClickListener(v -> taskLauncher.launch(new Intent(this, TaskCreateActivity.class)));
+        voiceFab.setOnClickListener(v -> startVoiceTaskFlow());
 
         refreshTasks();
     }
@@ -218,6 +258,91 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 == android.content.pm.PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 == android.content.pm.PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void startVoiceTaskFlow() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
+            return;
+        }
+        launchSpeechRecognizer();
+    }
+
+    private void launchSpeechRecognizer() {
+        try {
+            Toast.makeText(this, R.string.voice_listening, Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_command_task));
+            voiceRecognizerLauncher.launch(intent);
+        } catch (ActivityNotFoundException ex) {
+            Toast.makeText(this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleVoiceTranscript(String transcript) {
+        Toast.makeText(this, R.string.voice_processing, Toast.LENGTH_SHORT).show();
+        voiceExecutor.execute(() -> {
+            ParsedVoiceTask parsed = voiceTaskParser.parseOrFallback(this, transcript);
+            int estimatedDuration = computeEstimatedDurationMinutes(parsed);
+            runOnUiThread(() -> {
+                Intent intent = new Intent(this, TaskCreateActivity.class);
+                intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_TITLE,
+                        parsed.getTaskTitle() == null ? "Voice task" : parsed.getTaskTitle());
+                intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_DESCRIPTION,
+                        parsed.getDescription() == null ? transcript : parsed.getDescription());
+                if (parsed.getCategory() != null) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_CATEGORY, parsed.getCategory());
+                }
+                if (parsed.getPriority() != null) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_PRIORITY, parsed.getPriority());
+                }
+                if (parsed.getDueDatetime() != null) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_DUE_AT, parsed.getDueDatetime());
+                }
+                if (parsed.getPreferredStartDatetime() != null) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_PREFERRED_START, parsed.getPreferredStartDatetime());
+                }
+                if (parsed.getPreferredEndDatetime() != null) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_PREFERRED_END, parsed.getPreferredEndDatetime());
+                }
+                if (estimatedDuration >= 0) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_ESTIMATED_DURATION_MIN, estimatedDuration);
+                }
+                if (parsed.getLocationRadiusMeters() != null) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_LOCATION_RADIUS, parsed.getLocationRadiusMeters());
+                }
+                if (parsed.getEnableNotifications() != null) {
+                    intent.putExtra(TaskCreateActivity.EXTRA_PREFILL_NOTIFICATIONS, parsed.getEnableNotifications());
+                }
+                if ("Voice task".equals(intent.getStringExtra(TaskCreateActivity.EXTRA_PREFILL_TITLE))) {
+                    Toast.makeText(this, R.string.voice_fallback_used, Toast.LENGTH_SHORT).show();
+                }
+                taskLauncher.launch(intent);
+            });
+        });
+    }
+
+    private int computeEstimatedDurationMinutes(ParsedVoiceTask parsedVoiceTask) {
+        Long start = parseIsoTime(parsedVoiceTask.getPreferredStartDatetime());
+        Long end = parseIsoTime(parsedVoiceTask.getPreferredEndDatetime());
+        if (start == null || end == null || end <= start) {
+            return -1;
+        }
+        return (int) TimeUnit.MILLISECONDS.toMinutes(end - start);
+    }
+
+    @Nullable
+    private Long parseIsoTime(@Nullable String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return java.time.Instant.parse(value).toEpochMilli();
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private void refreshTasks() {

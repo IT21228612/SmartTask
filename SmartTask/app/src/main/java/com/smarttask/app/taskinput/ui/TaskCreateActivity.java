@@ -29,6 +29,8 @@ import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -38,6 +40,16 @@ import java.util.concurrent.TimeUnit;
 public class TaskCreateActivity extends AppCompatActivity {
 
     public static final String EXTRA_TASK_ID = "task_id";
+    public static final String EXTRA_PREFILL_TITLE = "prefill_title";
+    public static final String EXTRA_PREFILL_DESCRIPTION = "prefill_description";
+    public static final String EXTRA_PREFILL_CATEGORY = "prefill_category";
+    public static final String EXTRA_PREFILL_PRIORITY = "prefill_priority";
+    public static final String EXTRA_PREFILL_DUE_AT = "prefill_due_at";
+    public static final String EXTRA_PREFILL_PREFERRED_START = "prefill_preferred_start";
+    public static final String EXTRA_PREFILL_PREFERRED_END = "prefill_preferred_end";
+    public static final String EXTRA_PREFILL_ESTIMATED_DURATION_MIN = "prefill_estimated_duration_min";
+    public static final String EXTRA_PREFILL_LOCATION_RADIUS = "prefill_location_radius";
+    public static final String EXTRA_PREFILL_NOTIFICATIONS = "prefill_notifications";
     private static final int DEFAULT_LOCATION_RADIUS_METERS = 30;
 
     private TaskDao taskDao;
@@ -157,6 +169,7 @@ public class TaskCreateActivity extends AppCompatActivity {
             updateLocationDisplay(locationDisplay);
             notificationsSwitch.setChecked(true);
             locationRadiusInput.setText(String.valueOf(DEFAULT_LOCATION_RADIUS_METERS));
+            applyVoicePrefill();
         }
     }
 
@@ -318,6 +331,14 @@ public class TaskCreateActivity extends AppCompatActivity {
             errors.add(getString(R.string.error_due_before_preferred_end));
         }
 
+        Integer estimatedMinutes = parseIntegerSafe(estimatedDurationInput.getText().toString().trim());
+        if (selectedPreferredStart != null && selectedPreferredEnd != null && selectedPreferredEnd >= selectedPreferredStart) {
+            long expectedMinutes = TimeUnit.MILLISECONDS.toMinutes(selectedPreferredEnd - selectedPreferredStart);
+            if (estimatedMinutes != null && estimatedMinutes != expectedMinutes) {
+                errors.add(getString(R.string.error_estimated_duration_mismatch));
+            }
+        }
+
         if (!errors.isEmpty()) {
             showValidationDialog(errors);
             return true;
@@ -448,6 +469,76 @@ public class TaskCreateActivity extends AppCompatActivity {
             return label;
         }
         return selectedAddress;
+    }
+
+    private void applyVoicePrefill() {
+        Intent intent = getIntent();
+        if (intent == null) {
+            return;
+        }
+
+        String prefillTitle = intent.getStringExtra(EXTRA_PREFILL_TITLE);
+        if (!TextUtils.isEmpty(prefillTitle)) {
+            titleInput.setText(prefillTitle);
+        }
+
+        String prefillDescription = intent.getStringExtra(EXTRA_PREFILL_DESCRIPTION);
+        if (!TextUtils.isEmpty(prefillDescription)) {
+            descriptionInput.setText(prefillDescription);
+        }
+
+        String prefillCategory = intent.getStringExtra(EXTRA_PREFILL_CATEGORY);
+        if (!TextUtils.isEmpty(prefillCategory)) {
+            categorySpinner.setSelection(getCategoryIndex(prefillCategory));
+        }
+
+        String prefillPriority = intent.getStringExtra(EXTRA_PREFILL_PRIORITY);
+        if (!TextUtils.isEmpty(prefillPriority)) {
+            prioritySpinner.setSelection(getPriorityIndex(prefillPriority));
+        }
+
+        selectedDueDate = parseIsoDatetime(intent.getStringExtra(EXTRA_PREFILL_DUE_AT));
+        selectedPreferredStart = parseIsoDatetime(intent.getStringExtra(EXTRA_PREFILL_PREFERRED_START));
+        selectedPreferredEnd = parseIsoDatetime(intent.getStringExtra(EXTRA_PREFILL_PREFERRED_END));
+        updateDueDateDisplay();
+        updatePreferredStartDisplay();
+        updatePreferredEndDisplay();
+
+        int prefillEstimatedDuration = intent.getIntExtra(EXTRA_PREFILL_ESTIMATED_DURATION_MIN, -1);
+        if (prefillEstimatedDuration >= 0) {
+            estimatedDurationInput.setText(String.valueOf(prefillEstimatedDuration));
+        }
+
+        int prefillRadius = intent.getIntExtra(EXTRA_PREFILL_LOCATION_RADIUS, -1);
+        if (prefillRadius > 0) {
+            locationRadiusInput.setText(String.valueOf(prefillRadius));
+        }
+
+        if (intent.hasExtra(EXTRA_PREFILL_NOTIFICATIONS)) {
+            notificationsSwitch.setChecked(intent.getBooleanExtra(EXTRA_PREFILL_NOTIFICATIONS, true));
+        }
+    }
+
+    private int getPriorityIndex(String priority) {
+        String[] priorities = getResources().getStringArray(R.array.task_priority_options);
+        for (int i = 0; i < priorities.length; i++) {
+            if (priorities[i].equalsIgnoreCase(priority)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    @Nullable
+    private Long parseIsoDatetime(@Nullable String value) {
+        if (TextUtils.isEmpty(value)) {
+            return null;
+        }
+        try {
+            return Instant.parse(value).toEpochMilli();
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
     }
 
     private int getCategoryIndex(String category) {
