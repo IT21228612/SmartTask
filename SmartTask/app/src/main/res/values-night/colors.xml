@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Modern cool-blue palette for dark theme -->
+    <color name="md_theme_dark_primary">#A5B4FC</color>
+    <color name="md_theme_dark_onPrimary">#1E1B4B</color>
+    <color name="md_theme_dark_primaryContainer">#3730A3</color>
+    <color name="md_theme_dark_onPrimaryContainer">#E0E7FF</color>
+    <color name="md_theme_dark_secondary">#5EEAD4</color>
+    <color name="md_theme_dark_onSecondary">#042F2E</color>
+    <color name="md_theme_dark_secondaryContainer">#134E4A</color>
+    <color name="md_theme_dark_onSecondaryContainer">#CCFBF1</color>
+    <color name="md_theme_dark_background">#020617</color>
+    <color name="md_theme_dark_onBackground">#E2E8F0</color>
+    <color name="md_theme_dark_surface">#0F172A</color>
+    <color name="md_theme_dark_onSurface">#E2E8F0</color>
+    <color name="md_theme_dark_outline">#64748B</color>
+
+    <color name="task_completed_background">#FF1E293B</color>
+    <color name="swipe_delete_background">#FFDC2626</color>
+    <color name="swipe_edit_background">#FF3B82F6</color>
+</resources>
