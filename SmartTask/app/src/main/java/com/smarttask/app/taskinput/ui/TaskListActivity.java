@@ -345,12 +345,12 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
             public void onReadyForSpeech(Bundle params) {
-                setVoiceListeningState(true);
+                // Listening state is controlled by mic press-and-hold only.
             }
 
             @Override
             public void onBeginningOfSpeech() {
-                setVoiceListeningState(true);
+                // Listening state is controlled by mic press-and-hold only.
             }
 
             @Override
@@ -365,8 +365,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
             @Override
             public void onEndOfSpeech() {
-                setVoiceListeningState(false);
-                // Keep restarting recognition unless manually stopped.
+                // Listening state is controlled by mic press-and-hold only.
             }
 
             @Override
@@ -374,8 +373,11 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 if (!isVoiceSessionActive || isManualVoiceStopRequested) {
                     return;
                 }
-                if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
-                    scheduleSpeechRestart(250L);
+                if (error == SpeechRecognizer.ERROR_NO_MATCH
+                        || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+                        || error == SpeechRecognizer.ERROR_CLIENT) {
+                    // Keep listening while the user is still pressing and holding the mic icon.
+                    scheduleSpeechRestart(150L);
                     return;
                 }
                 Toast.makeText(TaskListActivity.this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
@@ -389,7 +391,8 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                     appendFinalVoiceResult(textResults.get(0));
                 }
                 if (isVoiceSessionActive && !isManualVoiceStopRequested) {
-                    scheduleSpeechRestart(200L);
+                    // Continue recognition while the mic icon is being held.
+                    scheduleSpeechRestart(150L);
                 }
             }
 
