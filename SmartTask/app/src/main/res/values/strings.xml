@@ -100,5 +100,5 @@ Signals: %3$s</string>
     <string name="voice_processing">Processing voice command…</string>
     <string name="voice_not_supported">Voice input is not available on this device.</string>
     <string name="voice_permission_required">Microphone permission is required for voice command.</string>
-    <string name="voice_fallback_used">Couldn't parse voice command, opened fallback task draft.</string>
+    <string name="voice_fallback_used">Couldn\'t parse voice command, opened fallback task draft.</string>
 </resources>
