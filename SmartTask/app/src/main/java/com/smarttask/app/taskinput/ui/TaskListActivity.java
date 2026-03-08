@@ -1,7 +1,6 @@
 package com.smarttask.app.taskinput.ui;
 
 import android.Manifest;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
@@ -17,6 +16,7 @@ import android.speech.SpeechRecognizer;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -325,12 +325,15 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         doneButton.setOnClickListener(v -> finishVoiceInputFromDialog());
         restartButton.setOnClickListener(v -> restartVoiceInputFromDialog());
         if (voiceStateIcon != null) {
-            voiceStateIcon.setOnClickListener(v -> toggleVoiceListeningFromDialog());
+            voiceStateIcon.setOnTouchListener((v, event) -> handleVoiceIconTouch(event));
         }
 
         resetCurrentVoiceTranscript();
         ensureSpeechRecognizer();
-        startSpeechListening();
+        isVoiceSessionActive = true;
+        isManualVoiceStopRequested = true;
+        isVoiceListeningPaused = true;
+        setVoiceListeningState(false);
     }
 
     private void ensureSpeechRecognizer() {
@@ -404,30 +407,6 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         });
     }
 
-    private void startSpeechListening() {
-        try {
-            Toast.makeText(this, R.string.voice_listening, Toast.LENGTH_SHORT).show();
-            if (speechRecognizerIntent == null) {
-                speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-            }
-            isVoiceSessionActive = true;
-            isManualVoiceStopRequested = false;
-            isVoiceListeningPaused = false;
-            setVoiceListeningState(true);
-            if (speechRecognizer != null && speechRecognizerIntent != null) {
-                speechRecognizer.startListening(speechRecognizerIntent);
-            }
-        } catch (ActivityNotFoundException ex) {
-            setVoiceListeningState(false);
-            Toast.makeText(this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
-            stopVoiceSession(false);
-        }
-    }
-
     private void scheduleSpeechRestart(long delayMs) {
         mainHandler.postDelayed(() -> {
             if (!isVoiceSessionActive || isManualVoiceStopRequested || isVoiceListeningPaused || speechRecognizer == null || speechRecognizerIntent == null) {
@@ -438,15 +417,20 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         }, delayMs);
     }
 
-    private void toggleVoiceListeningFromDialog() {
+    private boolean handleVoiceIconTouch(MotionEvent event) {
         if (!isVoiceSessionActive) {
-            return;
+            return false;
         }
-        if (isVoiceListeningPaused) {
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
             resumeSpeechListeningFromDialog();
-            return;
+            return true;
         }
-        pauseSpeechListeningFromDialog();
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            pauseSpeechListeningFromDialog();
+            return true;
+        }
+        return false;
     }
 
     private void pauseSpeechListeningFromDialog() {
@@ -488,10 +472,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
     private void restartVoiceInputFromDialog() {
         resetCurrentVoiceTranscript();
-        if (speechRecognizer != null) {
-            speechRecognizer.cancel();
-        }
-        startSpeechListening();
+        pauseSpeechListeningFromDialog();
     }
 
     private void stopVoiceSession(boolean dismissDialog) {
