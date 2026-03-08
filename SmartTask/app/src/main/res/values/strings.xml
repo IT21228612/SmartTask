@@ -57,8 +57,6 @@
     <string name="error_due_before_preferred_end">Due date cannot be before the preferred end time.</string>
     <string name="error_estimated_duration_mismatch">Estimated duration must match preferred start and end times.</string>
     <string name="menu_user_profile">User</string>
-    <string name="menu_sample_one">Sample item 1</string>
-    <string name="menu_sample_two">Sample item 2</string>
     <string name="menu_debug">Debug</string>
     <string name="debug_title">Debug tools</string>
     <string name="debug_description">Quick access to debugging utilities.</string>
