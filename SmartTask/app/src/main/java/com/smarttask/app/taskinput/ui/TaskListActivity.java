@@ -36,6 +36,8 @@ import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
 import com.smarttask.app.voiceCommandTaskCreation.OpenAiVoiceTaskParser;
 import com.smarttask.app.voiceCommandTaskCreation.ParsedVoiceTask;
+import com.smarttask.app.voicecommandlog.db.VoiceCommandLog;
+import com.smarttask.app.voicecommandlog.db.VoiceCommandLogDao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 public class TaskListActivity extends AppCompatActivity implements TaskAdapter.TaskClickListener {
 
     private TaskDao taskDao;
+    private VoiceCommandLogDao voiceCommandLogDao;
     private TaskAdapter adapter;
     private TextView emptyView;
     private boolean isDragging = false;
@@ -106,7 +109,9 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
         requestLocationPermissionsForBackgroundSnapshots();
 
-        taskDao = TaskDatabase.getInstance(this).taskDao();
+        TaskDatabase taskDatabase = TaskDatabase.getInstance(this);
+        taskDao = taskDatabase.taskDao();
+        voiceCommandLogDao = taskDatabase.voiceCommandLogDao();
 
         RecyclerView recyclerView = findViewById(R.id.task_recycler_view);
         emptyView = findViewById(R.id.empty_view);
@@ -285,6 +290,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         Toast.makeText(this, R.string.voice_processing, Toast.LENGTH_SHORT).show();
         voiceExecutor.execute(() -> {
             ParsedVoiceTask parsed = voiceTaskParser.parseOrFallback(this, transcript);
+            saveVoiceCommandLog(parsed, transcript);
             int estimatedDuration = computeEstimatedDurationMinutes(parsed);
             runOnUiThread(() -> {
                 Intent intent = new Intent(this, TaskCreateActivity.class);
@@ -322,6 +328,18 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 taskLauncher.launch(intent);
             });
         });
+    }
+
+    private void saveVoiceCommandLog(ParsedVoiceTask parsedVoiceTask, String transcript) {
+        if (voiceCommandLogDao == null) {
+            return;
+        }
+        VoiceCommandLog voiceCommandLog = new VoiceCommandLog();
+        voiceCommandLog.setTranscript(transcript);
+        String extractedJson = parsedVoiceTask.getExtractedJson();
+        voiceCommandLog.setExtractedJson(extractedJson == null ? "" : extractedJson);
+        voiceCommandLog.setCreatedAt(System.currentTimeMillis());
+        voiceCommandLogDao.insert(voiceCommandLog);
     }
 
     private int computeEstimatedDurationMinutes(ParsedVoiceTask parsedVoiceTask) {

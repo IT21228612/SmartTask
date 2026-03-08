@@ -147,6 +147,7 @@ public class OpenAiVoiceTaskParser {
 
         JSONObject result = new JSONObject(jsonText);
         ParsedVoiceTask parsedVoiceTask = new ParsedVoiceTask(transcript);
+        parsedVoiceTask.setExtractedJson(jsonText);
         parsedVoiceTask.setTaskTitle(blankToNull(result.optString("task_title", "")));
         parsedVoiceTask.setDescription(blankToNull(result.optString("description", "")));
         parsedVoiceTask.setCategory(validateCategory(result.optString("category", "")));
