@@ -3,12 +3,34 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:gravity="center_horizontal"
     android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/voice_state_icon"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:contentDescription="@string/voice_status_stopped"
+        android:focusable="true"
+        android:padding="8dp"
+        android:src="@android:drawable/ic_btn_speak_now"
+        android:tint="@android:color/darker_gray" />
+
+    <TextView
+        android:id="@+id/voice_state_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/voice_status_stopped"
+        android:textAppearance="?attr/textAppearanceBodyMedium" />
 
     <TextView
         android:id="@+id/voice_transcript_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:minHeight="72dp"
         android:text="@string/voice_listening_hint"
         android:textAppearance="?attr/textAppearanceBodyLarge" />

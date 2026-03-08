@@ -19,6 +19,7 @@ import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,9 +79,14 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
     private AlertDialog voiceInputDialog;
     @Nullable
     private TextView voiceTranscriptText;
+    @Nullable
+    private ImageView voiceStateIcon;
+    @Nullable
+    private TextView voiceStateText;
     private String latestPartialTranscript = "";
     private boolean isVoiceSessionActive;
     private boolean isManualVoiceStopRequested;
+    private boolean isVoiceListeningPaused;
 
     private final ActivityResultLauncher<Intent> taskLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -303,6 +309,8 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_voice_command, null);
         voiceTranscriptText = dialogView.findViewById(R.id.voice_transcript_text);
+        voiceStateIcon = dialogView.findViewById(R.id.voice_state_icon);
+        voiceStateText = dialogView.findViewById(R.id.voice_state_text);
         Button doneButton = dialogView.findViewById(R.id.voice_done_button);
         Button restartButton = dialogView.findViewById(R.id.voice_restart_button);
 
@@ -316,6 +324,9 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
         doneButton.setOnClickListener(v -> finishVoiceInputFromDialog());
         restartButton.setOnClickListener(v -> restartVoiceInputFromDialog());
+        if (voiceStateIcon != null) {
+            voiceStateIcon.setOnClickListener(v -> toggleVoiceListeningFromDialog());
+        }
 
         resetCurrentVoiceTranscript();
         ensureSpeechRecognizer();
@@ -331,12 +342,12 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
             public void onReadyForSpeech(Bundle params) {
-                // No-op.
+                setVoiceListeningState(true);
             }
 
             @Override
             public void onBeginningOfSpeech() {
-                // No-op.
+                setVoiceListeningState(true);
             }
 
             @Override
@@ -351,6 +362,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
             @Override
             public void onEndOfSpeech() {
+                setVoiceListeningState(false);
                 // Keep restarting recognition unless manually stopped.
             }
 
@@ -404,10 +416,13 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             }
             isVoiceSessionActive = true;
             isManualVoiceStopRequested = false;
+            isVoiceListeningPaused = false;
+            setVoiceListeningState(true);
             if (speechRecognizer != null && speechRecognizerIntent != null) {
                 speechRecognizer.startListening(speechRecognizerIntent);
             }
         } catch (ActivityNotFoundException ex) {
+            setVoiceListeningState(false);
             Toast.makeText(this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
             stopVoiceSession(false);
         }
@@ -415,12 +430,52 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
     private void scheduleSpeechRestart(long delayMs) {
         mainHandler.postDelayed(() -> {
-            if (!isVoiceSessionActive || isManualVoiceStopRequested || speechRecognizer == null || speechRecognizerIntent == null) {
+            if (!isVoiceSessionActive || isManualVoiceStopRequested || isVoiceListeningPaused || speechRecognizer == null || speechRecognizerIntent == null) {
                 return;
             }
             speechRecognizer.cancel();
             speechRecognizer.startListening(speechRecognizerIntent);
         }, delayMs);
+    }
+
+    private void toggleVoiceListeningFromDialog() {
+        if (!isVoiceSessionActive) {
+            return;
+        }
+        if (isVoiceListeningPaused) {
+            resumeSpeechListeningFromDialog();
+            return;
+        }
+        pauseSpeechListeningFromDialog();
+    }
+
+    private void pauseSpeechListeningFromDialog() {
+        isVoiceListeningPaused = true;
+        isManualVoiceStopRequested = true;
+        setVoiceListeningState(false);
+        if (speechRecognizer != null) {
+            speechRecognizer.cancel();
+            speechRecognizer.stopListening();
+        }
+    }
+
+    private void resumeSpeechListeningFromDialog() {
+        if (speechRecognizer == null) {
+            ensureSpeechRecognizer();
+        }
+        if (speechRecognizerIntent == null) {
+            speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+            speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+            speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+        }
+        isManualVoiceStopRequested = false;
+        isVoiceListeningPaused = false;
+        if (speechRecognizer != null) {
+            speechRecognizer.startListening(speechRecognizerIntent);
+            setVoiceListeningState(true);
+        }
     }
 
     private void finishVoiceInputFromDialog() {
@@ -442,6 +497,8 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
     private void stopVoiceSession(boolean dismissDialog) {
         isVoiceSessionActive = false;
         isManualVoiceStopRequested = true;
+        isVoiceListeningPaused = false;
+        setVoiceListeningState(false);
         mainHandler.removeCallbacksAndMessages(null);
         if (speechRecognizer != null) {
             speechRecognizer.cancel();
@@ -453,6 +510,20 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         if (!dismissDialog) {
             voiceInputDialog = null;
             voiceTranscriptText = null;
+            voiceStateIcon = null;
+            voiceStateText = null;
+        }
+    }
+
+    private void setVoiceListeningState(boolean isListening) {
+        if (voiceStateIcon != null) {
+            voiceStateIcon.setImageResource(android.R.drawable.ic_btn_speak_now);
+            int tintColor = ContextCompat.getColor(this, isListening ? android.R.color.holo_red_light : android.R.color.darker_gray);
+            voiceStateIcon.setColorFilter(tintColor);
+            voiceStateIcon.setContentDescription(getString(isListening ? R.string.voice_action_pause_listening : R.string.voice_action_resume_listening));
+        }
+        if (voiceStateText != null) {
+            voiceStateText.setText(isListening ? R.string.voice_status_listening : R.string.voice_status_stopped);
         }
     }
 
