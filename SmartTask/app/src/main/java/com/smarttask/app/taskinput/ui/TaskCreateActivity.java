@@ -30,6 +30,9 @@ import com.smarttask.app.taskinput.db.TaskDatabase;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.List;
@@ -537,7 +540,17 @@ public class TaskCreateActivity extends AppCompatActivity {
         try {
             return Instant.parse(value).toEpochMilli();
         } catch (DateTimeParseException ignored) {
-            return null;
+            try {
+                LocalDateTime localDateTime = LocalDateTime.parse(value);
+                return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            } catch (DateTimeParseException ignoredLocalDateTime) {
+                try {
+                    LocalDate localDate = LocalDate.parse(value);
+                    return localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                } catch (DateTimeParseException ignoredLocalDate) {
+                    return null;
+                }
+            }
         }
     }
 
