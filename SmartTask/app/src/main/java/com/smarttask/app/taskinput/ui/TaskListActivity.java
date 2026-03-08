@@ -429,8 +429,13 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             resumeSpeechListeningFromDialog();
             return true;
         }
-        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+        if (action == MotionEvent.ACTION_UP) {
             pauseSpeechListeningFromDialog();
+            return true;
+        }
+        if (action == MotionEvent.ACTION_CANCEL) {
+            // Some devices dispatch ACTION_CANCEL while the finger is still held on the mic icon.
+            // Keep listening active to avoid unexpected auto on/off toggles mid-press.
             return true;
         }
         return false;
