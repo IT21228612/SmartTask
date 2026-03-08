@@ -1,23 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="12dp"
+    android:layout_marginHorizontal="14dp"
     android:layout_marginVertical="6dp"
-    app:cardElevation="2dp">
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
 
         <TextView
             android:id="@+id/item_task_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             app:layout_constraintEnd_toStartOf="@+id/item_task_location_icon"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -26,8 +33,10 @@
             android:id="@+id/item_task_location_icon"
             android:layout_width="20dp"
             android:layout_height="20dp"
+            android:layout_marginStart="10dp"
             android:contentDescription="@string/task_location_indicator"
-            android:src="@android:drawable/ic_menu_mylocation"
+            android:src="@drawable/ic_location_pin"
+            android:tint="?attr/colorPrimary"
             app:layout_constraintEnd_toStartOf="@+id/item_task_completed_checkbox"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -35,7 +44,6 @@
             android:id="@+id/item_task_completed_checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:contentDescription="@string/task_completed_checkbox"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -44,8 +52,9 @@
             android:id="@+id/item_task_due"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurface"
             app:layout_constraintEnd_toStartOf="@+id/item_task_completed_checkbox"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/item_task_title" />
@@ -55,10 +64,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
             app:layout_constraintEnd_toStartOf="@+id/item_task_completed_checkbox"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/item_task_due" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

@@ -4,22 +4,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:colorBackground"
     tools:context=".taskinput.ui.TaskListActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:elevation="0dp"
+        android:paddingHorizontal="8dp"
+        android:paddingTop="8dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/task_list_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorSurface"
+            android:elevation="0dp"
             app:menu="@menu/menu_task_list_toolbar"
             app:navigationIcon="@drawable/ic_menu_button"
             app:navigationIconTint="?attr/colorOnSurface"
+            app:subtitle="@string/task_list_subtitle"
             app:title="@string/app_name"
-            app:titleCentered="true" />
+            app:titleCentered="false"
+            app:titleTextAppearance="?attr/textAppearanceTitleLarge" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -29,10 +37,12 @@
 
         <TextView
             android:id="@+id/empty_view"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingHorizontal="32dp"
             android:text="@string/task_empty_state"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -42,8 +52,9 @@
             android:id="@+id/task_recycler_view"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="80dp"
+            android:clipToPadding="false"
+            android:paddingTop="4dp"
+            android:paddingBottom="108dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -55,19 +66,19 @@
         android:id="@+id/add_task_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/add_task"
-        android:src="@android:drawable/ic_input_add"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="88dp" />
+        android:layout_marginBottom="92dp"
+        android:contentDescription="@string/add_task"
+        app:srcCompat="@drawable/ic_add_task" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/voice_task_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/voice_command_task"
-        android:src="@android:drawable/ic_btn_speak_now"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp" />
+        android:layout_margin="16dp"
+        android:contentDescription="@string/voice_command_task"
+        app:srcCompat="@drawable/ic_voice_mic" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
