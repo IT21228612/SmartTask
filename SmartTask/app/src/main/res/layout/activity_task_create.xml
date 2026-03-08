@@ -62,83 +62,62 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/task_due_date_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:hint="@string/task_due_date_label"
+            app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
+            app:endIconMode="custom">
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_due_date_display"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:clickable="true"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
-                android:hint="@string/task_due_date_label"
                 android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/task_clear_due_date_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/task_clear_due_date" />
-        </LinearLayout>
-
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/task_preferred_start_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:hint="@string/task_preferred_start_label"
+            app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
+            app:endIconMode="custom">
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_preferred_start_display"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:clickable="true"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
-                android:hint="@string/task_preferred_start_label"
                 android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/task_clear_preferred_start_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/task_clear_due_date" />
-        </LinearLayout>
-
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/task_preferred_end_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:hint="@string/task_preferred_end_label"
+            app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
+            app:endIconMode="custom">
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_preferred_end_display"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:clickable="true"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
-                android:hint="@string/task_preferred_end_label"
                 android:inputType="none" />
-
-            <Button
-                android:id="@+id/task_clear_preferred_end_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/task_clear_due_date" />
-        </LinearLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"

@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
 
+import com.google.android.material.textfield.TextInputLayout;
 import com.smarttask.app.R;
 import com.smarttask.app.contextacquisition.api.ContextEngine;
 import com.smarttask.app.taskinput.db.Task;
@@ -64,6 +65,9 @@ public class TaskCreateActivity extends AppCompatActivity {
     private EditText dueDateDisplay;
     private EditText preferredStartDisplay;
     private EditText preferredEndDisplay;
+    private TextInputLayout dueDateLayout;
+    private TextInputLayout preferredStartLayout;
+    private TextInputLayout preferredEndLayout;
     private Spinner prioritySpinner;
     private Spinner categorySpinner;
     private Switch notificationsSwitch;
@@ -98,13 +102,13 @@ public class TaskCreateActivity extends AppCompatActivity {
         dueDateDisplay = findViewById(R.id.task_due_date_display);
         preferredStartDisplay = findViewById(R.id.task_preferred_start_display);
         preferredEndDisplay = findViewById(R.id.task_preferred_end_display);
+        dueDateLayout = findViewById(R.id.task_due_date_layout);
+        preferredStartLayout = findViewById(R.id.task_preferred_start_layout);
+        preferredEndLayout = findViewById(R.id.task_preferred_end_layout);
         prioritySpinner = findViewById(R.id.task_priority_spinner);
         categorySpinner = findViewById(R.id.task_category_spinner);
         notificationsSwitch = findViewById(R.id.task_notifications_switch);
         TextView locationDisplay = findViewById(R.id.task_location_display);
-        Button clearDueDateButton = findViewById(R.id.task_clear_due_date_button);
-        Button clearPreferredStartButton = findViewById(R.id.task_clear_preferred_start_button);
-        Button clearPreferredEndButton = findViewById(R.id.task_clear_preferred_end_button);
         Button locationButton = findViewById(R.id.task_location_button);
         Button clearLocationButton = findViewById(R.id.task_clear_location_button);
         Button saveButton = findViewById(R.id.save_task_button);
@@ -141,17 +145,17 @@ public class TaskCreateActivity extends AppCompatActivity {
         categorySpinner.setAdapter(categoryAdapter);
 
         dueDateDisplay.setOnClickListener(v -> openDueDatePicker());
-        clearDueDateButton.setOnClickListener(v -> {
+        dueDateLayout.setEndIconOnClickListener(v -> {
             selectedDueDate = null;
             updateDueDateDisplay();
         });
         preferredStartDisplay.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_START));
-        clearPreferredStartButton.setOnClickListener(v -> {
+        preferredStartLayout.setEndIconOnClickListener(v -> {
             selectedPreferredStart = null;
             updatePreferredStartDisplay();
         });
         preferredEndDisplay.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_END));
-        clearPreferredEndButton.setOnClickListener(v -> {
+        preferredEndLayout.setEndIconOnClickListener(v -> {
             selectedPreferredEnd = null;
             updatePreferredEndDisplay();
         });
@@ -289,24 +293,30 @@ public class TaskCreateActivity extends AppCompatActivity {
     private void updateDueDateDisplay() {
         if (selectedDueDate == null) {
             dueDateDisplay.setText("");
+            dueDateLayout.setEndIconVisible(false);
         } else {
             dueDateDisplay.setText(dateFormat.format(selectedDueDate));
+            dueDateLayout.setEndIconVisible(true);
         }
     }
 
     private void updatePreferredStartDisplay() {
         if (selectedPreferredStart == null) {
             preferredStartDisplay.setText("");
+            preferredStartLayout.setEndIconVisible(false);
         } else {
             preferredStartDisplay.setText(dateFormat.format(selectedPreferredStart));
+            preferredStartLayout.setEndIconVisible(true);
         }
     }
 
     private void updatePreferredEndDisplay() {
         if (selectedPreferredEnd == null) {
             preferredEndDisplay.setText("");
+            preferredEndLayout.setEndIconVisible(false);
         } else {
             preferredEndDisplay.setText(dateFormat.format(selectedPreferredEnd));
+            preferredEndLayout.setEndIconVisible(true);
         }
     }
 
