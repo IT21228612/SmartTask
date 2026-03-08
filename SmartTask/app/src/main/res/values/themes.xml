@@ -1,9 +1,80 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.SmartTask" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/md_theme_light_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/md_theme_light_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/md_theme_light_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/md_theme_light_secondary</item>
+        <item name="colorOnSecondary">@color/md_theme_light_onSecondary</item>
+        <item name="android:colorBackground">@color/md_theme_light_background</item>
+        <item name="colorOnBackground">@color/md_theme_light_onBackground</item>
+        <item name="colorSurface">@color/md_theme_light_surface</item>
+        <item name="colorOnSurface">@color/md_theme_light_onSurface</item>
+        <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
+        <item name="colorOutline">@color/md_theme_light_outline</item>
+
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.SmartTask.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.SmartTask.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.SmartTask.TitleMedium</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.SmartTask.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.SmartTask.BodyMedium</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.SmartTask.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.SmartTask.Medium</item>
+        <item name="materialButtonStyle">@style/Widget.SmartTask.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.SmartTask.Button.Outlined</item>
+        <item name="floatingActionButtonStyle">@style/Widget.SmartTask.Fab</item>
     </style>
 
     <style name="Theme.SmartTask" parent="Base.Theme.SmartTask" />
+
+    <style name="TextAppearance.SmartTask.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="TextAppearance.SmartTask.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">22sp</item>
+    </style>
+
+    <style name="TextAppearance.SmartTask.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="TextAppearance.SmartTask.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="TextAppearance.SmartTask.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="ShapeAppearance.SmartTask.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style name="ShapeAppearance.SmartTask.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <style name="Widget.SmartTask.Button" parent="Widget.Material3.Button">
+        <item name="shapeAppearance">@style/ShapeAppearance.SmartTask.Small</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.SmartTask.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.SmartTask.Small</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="Widget.SmartTask.Fab" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="shapeAppearance">@style/ShapeAppearance.SmartTask.Small</item>
+    </style>
 </resources>
