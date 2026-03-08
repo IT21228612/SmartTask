@@ -39,6 +39,11 @@ import com.smarttask.app.voiceCommandTaskCreation.ParsedVoiceTask;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLog;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLogDao;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -357,9 +362,19 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             return null;
         }
         try {
-            return java.time.Instant.parse(value).toEpochMilli();
-        } catch (Exception ignored) {
-            return null;
+            return Instant.parse(value).toEpochMilli();
+        } catch (DateTimeParseException ignored) {
+            try {
+                LocalDateTime localDateTime = LocalDateTime.parse(value);
+                return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            } catch (DateTimeParseException ignoredLocalDateTime) {
+                try {
+                    LocalDate localDate = LocalDate.parse(value);
+                    return localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                } catch (DateTimeParseException ignoredLocalDate) {
+                    return null;
+                }
+            }
         }
     }
 
