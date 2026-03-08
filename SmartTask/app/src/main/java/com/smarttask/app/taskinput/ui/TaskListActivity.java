@@ -87,6 +87,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
     private boolean isVoiceSessionActive;
     private boolean isManualVoiceStopRequested;
     private boolean isVoiceListeningPaused;
+    private boolean isRecognizerListening;
 
     private final ActivityResultLauncher<Intent> taskLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -345,7 +346,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
             public void onReadyForSpeech(Bundle params) {
-                // Listening state is controlled by mic press-and-hold only.
+                isRecognizerListening = true;
             }
 
             @Override
@@ -365,11 +366,12 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
             @Override
             public void onEndOfSpeech() {
-                // Listening state is controlled by mic press-and-hold only.
+                isRecognizerListening = false;
             }
 
             @Override
             public void onError(int error) {
+                isRecognizerListening = false;
                 if (!isVoiceSessionActive || isManualVoiceStopRequested) {
                     return;
                 }
@@ -386,6 +388,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
             @Override
             public void onResults(Bundle results) {
+                isRecognizerListening = false;
                 ArrayList<String> textResults = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (textResults != null && !textResults.isEmpty()) {
                     appendFinalVoiceResult(textResults.get(0));
@@ -398,6 +401,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
             @Override
             public void onPartialResults(Bundle partialResults) {
+                isRecognizerListening = true;
                 ArrayList<String> textResults = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 latestPartialTranscript = (textResults == null || textResults.isEmpty()) ? "" : textResults.get(0);
                 updateVoiceTranscriptPreview();
@@ -415,7 +419,9 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             if (!isVoiceSessionActive || isManualVoiceStopRequested || isVoiceListeningPaused || speechRecognizer == null || speechRecognizerIntent == null) {
                 return;
             }
-            speechRecognizer.cancel();
+            if (isRecognizerListening) {
+                return;
+            }
             speechRecognizer.startListening(speechRecognizerIntent);
         }, delayMs);
     }
@@ -446,6 +452,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         isManualVoiceStopRequested = true;
         setVoiceListeningState(false);
         if (speechRecognizer != null) {
+            isRecognizerListening = false;
             speechRecognizer.cancel();
             speechRecognizer.stopListening();
         }
@@ -465,6 +472,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         isManualVoiceStopRequested = false;
         isVoiceListeningPaused = false;
         if (speechRecognizer != null) {
+            isRecognizerListening = true;
             speechRecognizer.startListening(speechRecognizerIntent);
             setVoiceListeningState(true);
         }
@@ -490,6 +498,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         setVoiceListeningState(false);
         mainHandler.removeCallbacksAndMessages(null);
         if (speechRecognizer != null) {
+            isRecognizerListening = false;
             speechRecognizer.cancel();
             speechRecognizer.stopListening();
         }
