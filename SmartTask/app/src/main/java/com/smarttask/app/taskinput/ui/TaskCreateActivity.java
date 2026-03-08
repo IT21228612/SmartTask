@@ -61,9 +61,9 @@ public class TaskCreateActivity extends AppCompatActivity {
     private EditText estimatedDurationInput;
     private EditText locationLabelInput;
     private EditText locationRadiusInput;
-    private TextView dueDateDisplay;
-    private TextView preferredStartDisplay;
-    private TextView preferredEndDisplay;
+    private EditText dueDateDisplay;
+    private EditText preferredStartDisplay;
+    private EditText preferredEndDisplay;
     private Spinner prioritySpinner;
     private Spinner categorySpinner;
     private Switch notificationsSwitch;
@@ -102,11 +102,8 @@ public class TaskCreateActivity extends AppCompatActivity {
         categorySpinner = findViewById(R.id.task_category_spinner);
         notificationsSwitch = findViewById(R.id.task_notifications_switch);
         TextView locationDisplay = findViewById(R.id.task_location_display);
-        Button dueDateButton = findViewById(R.id.task_due_date_button);
         Button clearDueDateButton = findViewById(R.id.task_clear_due_date_button);
-        Button preferredStartButton = findViewById(R.id.task_preferred_start_button);
         Button clearPreferredStartButton = findViewById(R.id.task_clear_preferred_start_button);
-        Button preferredEndButton = findViewById(R.id.task_preferred_end_button);
         Button clearPreferredEndButton = findViewById(R.id.task_clear_preferred_end_button);
         Button locationButton = findViewById(R.id.task_location_button);
         Button clearLocationButton = findViewById(R.id.task_clear_location_button);
@@ -143,17 +140,17 @@ public class TaskCreateActivity extends AppCompatActivity {
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         categorySpinner.setAdapter(categoryAdapter);
 
-        dueDateButton.setOnClickListener(v -> openDueDatePicker());
+        dueDateDisplay.setOnClickListener(v -> openDueDatePicker());
         clearDueDateButton.setOnClickListener(v -> {
             selectedDueDate = null;
             updateDueDateDisplay();
         });
-        preferredStartButton.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_START));
+        preferredStartDisplay.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_START));
         clearPreferredStartButton.setOnClickListener(v -> {
             selectedPreferredStart = null;
             updatePreferredStartDisplay();
         });
-        preferredEndButton.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_END));
+        preferredEndDisplay.setOnClickListener(v -> openTimeSelector(TimeType.PREFERRED_END));
         clearPreferredEndButton.setOnClickListener(v -> {
             selectedPreferredEnd = null;
             updatePreferredEndDisplay();
@@ -291,7 +288,7 @@ public class TaskCreateActivity extends AppCompatActivity {
 
     private void updateDueDateDisplay() {
         if (selectedDueDate == null) {
-            dueDateDisplay.setText(R.string.task_due_date_not_set);
+            dueDateDisplay.setText("");
         } else {
             dueDateDisplay.setText(dateFormat.format(selectedDueDate));
         }
@@ -299,7 +296,7 @@ public class TaskCreateActivity extends AppCompatActivity {
 
     private void updatePreferredStartDisplay() {
         if (selectedPreferredStart == null) {
-            preferredStartDisplay.setText(R.string.task_preferred_time_not_set);
+            preferredStartDisplay.setText("");
         } else {
             preferredStartDisplay.setText(dateFormat.format(selectedPreferredStart));
         }
@@ -307,7 +304,7 @@ public class TaskCreateActivity extends AppCompatActivity {
 
     private void updatePreferredEndDisplay() {
         if (selectedPreferredEnd == null) {
-            preferredEndDisplay.setText(R.string.task_preferred_time_not_set);
+            preferredEndDisplay.setText("");
         } else {
             preferredEndDisplay.setText(dateFormat.format(selectedPreferredEnd));
         }
