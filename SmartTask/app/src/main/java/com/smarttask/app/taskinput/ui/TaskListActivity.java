@@ -9,10 +9,16 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +26,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.content.ContextCompat;
@@ -60,6 +67,20 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
     private boolean isDragging = false;
     private final ExecutorService voiceExecutor = Executors.newSingleThreadExecutor();
     private final OpenAiVoiceTaskParser voiceTaskParser = new OpenAiVoiceTaskParser();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final StringBuilder accumulatedVoiceTranscript = new StringBuilder();
+
+    @Nullable
+    private SpeechRecognizer speechRecognizer;
+    @Nullable
+    private Intent speechRecognizerIntent;
+    @Nullable
+    private AlertDialog voiceInputDialog;
+    @Nullable
+    private TextView voiceTranscriptText;
+    private String latestPartialTranscript = "";
+    private boolean isVoiceSessionActive;
+    private boolean isManualVoiceStopRequested;
 
     private final ActivityResultLauncher<Intent> taskLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -86,24 +107,10 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             new ActivityResultContracts.RequestPermission(),
             granted -> {
                 if (granted) {
-                    launchSpeechRecognizer();
+                    launchVoiceDialog();
                 } else {
                     Toast.makeText(this, R.string.voice_permission_required, Toast.LENGTH_SHORT).show();
                 }
-            }
-    );
-
-    private final ActivityResultLauncher<Intent> voiceRecognizerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() != RESULT_OK || result.getData() == null) {
-                    return;
-                }
-                ArrayList<String> textResults = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                if (textResults == null || textResults.isEmpty()) {
-                    return;
-                }
-                handleVoiceTranscript(textResults.get(0));
             }
     );
 
@@ -244,6 +251,16 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         refreshTasks();
     }
 
+    @Override
+    protected void onDestroy() {
+        stopVoiceSession(false);
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+            speechRecognizer = null;
+        }
+        super.onDestroy();
+    }
+
     private void requestLocationPermissionsForBackgroundSnapshots() {
         if (!hasForegroundLocationPermission()) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
@@ -275,20 +292,212 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
             return;
         }
-        launchSpeechRecognizer();
+        launchVoiceDialog();
     }
 
-    private void launchSpeechRecognizer() {
+    private void launchVoiceDialog() {
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            Toast.makeText(this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_voice_command, null);
+        voiceTranscriptText = dialogView.findViewById(R.id.voice_transcript_text);
+        Button doneButton = dialogView.findViewById(R.id.voice_done_button);
+        Button restartButton = dialogView.findViewById(R.id.voice_restart_button);
+
+        voiceInputDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.voice_command_task)
+                .setView(dialogView)
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> stopVoiceSession(false))
+                .setOnDismissListener(dialog -> stopVoiceSession(false))
+                .create();
+        voiceInputDialog.show();
+
+        doneButton.setOnClickListener(v -> finishVoiceInputFromDialog());
+        restartButton.setOnClickListener(v -> restartVoiceInputFromDialog());
+
+        resetCurrentVoiceTranscript();
+        ensureSpeechRecognizer();
+        startSpeechListening();
+    }
+
+    private void ensureSpeechRecognizer() {
+        if (speechRecognizer != null) {
+            return;
+        }
+
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                // No-op.
+            }
+
+            @Override
+            public void onBeginningOfSpeech() {
+                // No-op.
+            }
+
+            @Override
+            public void onRmsChanged(float rmsdB) {
+                // No-op.
+            }
+
+            @Override
+            public void onBufferReceived(byte[] buffer) {
+                // No-op.
+            }
+
+            @Override
+            public void onEndOfSpeech() {
+                // Keep restarting recognition unless manually stopped.
+            }
+
+            @Override
+            public void onError(int error) {
+                if (!isVoiceSessionActive || isManualVoiceStopRequested) {
+                    return;
+                }
+                if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                    scheduleSpeechRestart(250L);
+                    return;
+                }
+                Toast.makeText(TaskListActivity.this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
+                stopVoiceSession(false);
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> textResults = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (textResults != null && !textResults.isEmpty()) {
+                    appendFinalVoiceResult(textResults.get(0));
+                }
+                if (isVoiceSessionActive && !isManualVoiceStopRequested) {
+                    scheduleSpeechRestart(200L);
+                }
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+                ArrayList<String> textResults = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                latestPartialTranscript = (textResults == null || textResults.isEmpty()) ? "" : textResults.get(0);
+                updateVoiceTranscriptPreview();
+            }
+
+            @Override
+            public void onEvent(int eventType, Bundle params) {
+                // No-op.
+            }
+        });
+    }
+
+    private void startSpeechListening() {
         try {
             Toast.makeText(this, R.string.voice_listening, Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_command_task));
-            voiceRecognizerLauncher.launch(intent);
+            if (speechRecognizerIntent == null) {
+                speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+            }
+            isVoiceSessionActive = true;
+            isManualVoiceStopRequested = false;
+            if (speechRecognizer != null && speechRecognizerIntent != null) {
+                speechRecognizer.startListening(speechRecognizerIntent);
+            }
         } catch (ActivityNotFoundException ex) {
             Toast.makeText(this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
+            stopVoiceSession(false);
         }
+    }
+
+    private void scheduleSpeechRestart(long delayMs) {
+        mainHandler.postDelayed(() -> {
+            if (!isVoiceSessionActive || isManualVoiceStopRequested || speechRecognizer == null || speechRecognizerIntent == null) {
+                return;
+            }
+            speechRecognizer.cancel();
+            speechRecognizer.startListening(speechRecognizerIntent);
+        }, delayMs);
+    }
+
+    private void finishVoiceInputFromDialog() {
+        String transcript = getCurrentVoiceTranscript();
+        stopVoiceSession(true);
+        if (!transcript.isEmpty()) {
+            handleVoiceTranscript(transcript);
+        }
+    }
+
+    private void restartVoiceInputFromDialog() {
+        resetCurrentVoiceTranscript();
+        if (speechRecognizer != null) {
+            speechRecognizer.cancel();
+        }
+        startSpeechListening();
+    }
+
+    private void stopVoiceSession(boolean dismissDialog) {
+        isVoiceSessionActive = false;
+        isManualVoiceStopRequested = true;
+        mainHandler.removeCallbacksAndMessages(null);
+        if (speechRecognizer != null) {
+            speechRecognizer.cancel();
+            speechRecognizer.stopListening();
+        }
+        if (dismissDialog && voiceInputDialog != null && voiceInputDialog.isShowing()) {
+            voiceInputDialog.dismiss();
+        }
+        if (!dismissDialog) {
+            voiceInputDialog = null;
+            voiceTranscriptText = null;
+        }
+    }
+
+    private void resetCurrentVoiceTranscript() {
+        accumulatedVoiceTranscript.setLength(0);
+        latestPartialTranscript = "";
+        updateVoiceTranscriptPreview();
+    }
+
+    private void appendFinalVoiceResult(@Nullable String text) {
+        if (TextUtils.isEmpty(text)) {
+            return;
+        }
+        String normalized = text == null ? "" : text.trim();
+        if (normalized.isEmpty()) {
+            return;
+        }
+        if (accumulatedVoiceTranscript.length() > 0) {
+            accumulatedVoiceTranscript.append(' ');
+        }
+        accumulatedVoiceTranscript.append(normalized);
+        latestPartialTranscript = "";
+        updateVoiceTranscriptPreview();
+    }
+
+    private String getCurrentVoiceTranscript() {
+        String stablePart = accumulatedVoiceTranscript.toString().trim();
+        String partialPart = latestPartialTranscript == null ? "" : latestPartialTranscript.trim();
+        if (stablePart.isEmpty()) {
+            return partialPart;
+        }
+        if (partialPart.isEmpty()) {
+            return stablePart;
+        }
+        return stablePart + " " + partialPart;
+    }
+
+    private void updateVoiceTranscriptPreview() {
+        if (voiceTranscriptText == null) {
+            return;
+        }
+        String transcript = getCurrentVoiceTranscript();
+        voiceTranscriptText.setText(transcript.isEmpty()
+                ? getString(R.string.voice_listening_hint)
+                : transcript);
     }
 
     private void handleVoiceTranscript(String transcript) {
