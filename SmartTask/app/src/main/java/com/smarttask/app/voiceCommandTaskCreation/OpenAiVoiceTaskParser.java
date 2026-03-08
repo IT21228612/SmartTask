@@ -11,7 +11,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -64,6 +67,7 @@ public class OpenAiVoiceTaskParser {
     }
 
     private JSONObject buildRequestJson(String transcript) throws JSONException {
+        ZonedDateTime localNow = ZonedDateTime.now();
         JSONObject request = new JSONObject();
         request.put("model", "gpt-4.1-mini");
 
@@ -73,7 +77,7 @@ public class OpenAiVoiceTaskParser {
                 .put("content", buildSystemInstruction()));
         input.put(new JSONObject()
                 .put("role", "user")
-                .put("content", "Transcript: " + transcript));
+                .put("content", buildUserPrompt(transcript, localNow)));
 
         request.put("input", input);
 
@@ -124,6 +128,8 @@ public class OpenAiVoiceTaskParser {
     private String buildSystemInstruction() {
         return "Extract task creation fields from a spoken command. "
                 + "Return ONLY valid JSON fields for this schema and nothing else. "
+                + "Resolve relative dates/times using the provided current local date/time reference and timezone. "
+                + "Do not guess dates/times when that reference is missing or unclear. "
                 + "If a value is not clearly specified, return an empty string. "
                 + "task_title should be blank if uncertain. "
                 + "description should include extra details if present. "
@@ -135,6 +141,13 @@ public class OpenAiVoiceTaskParser {
                 + "enable_notifications should be true/false string only when clearly implied or explicitly requested; otherwise blank. "
                 + "Preserve the full transcript exactly in raw_transcript. "
                 + "Never invent missing information.";
+    }
+
+    private String buildUserPrompt(String transcript, ZonedDateTime localNow) {
+        return "Current local date: " + localNow.toLocalDate() + "\n"
+                + "Current local time: " + localNow.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "\n"
+                + "Timezone: " + TimeZone.getDefault().getID() + "\n"
+                + "Transcript: " + transcript;
     }
 
     @Nullable
