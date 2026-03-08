@@ -4,14 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:colorBackground"
     tools:context=".taskinput.ui.TaskCreateActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:padding="16dp">
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -20,29 +19,29 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_title_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapSentences" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapSentences" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:hint="@string/task_description_label">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_description_input"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
-                android:minLines="3" />
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -87,7 +86,7 @@
             android:id="@+id/task_due_date_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:hint="@string/task_due_date_label"
             app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
             app:endIconMode="custom">
@@ -106,7 +105,7 @@
             android:id="@+id/task_preferred_start_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:hint="@string/task_preferred_start_label"
             app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
             app:endIconMode="custom">
@@ -125,7 +124,7 @@
             android:id="@+id/task_preferred_end_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:hint="@string/task_preferred_end_label"
             app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
             app:endIconMode="custom">
@@ -143,7 +142,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:hint="@string/task_estimated_duration_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -156,25 +155,25 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/task_location_button"
-                style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/task_add_location" />
+                android:text="@string/task_add_location"
+                android:textAllCaps="false" />
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/task_clear_location_button"
-                style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="@string/task_clear_location" />
+                android:text="@string/task_clear_location"
+                android:textAllCaps="false" />
         </LinearLayout>
 
         <TextView
@@ -188,7 +187,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:hint="@string/task_location_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -201,7 +200,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:hint="@string/task_location_radius_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -214,7 +213,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -225,7 +224,7 @@
                 android:text="@string/task_notifications_label"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-            <com.google.android.material.materialswitch.MaterialSwitch
+            <Switch
                 android:id="@+id/task_notifications_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -234,19 +233,18 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             android:gravity="center"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/save_task_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/save_task" />
 
-            <com.google.android.material.button.MaterialButton
-                style="?attr/materialButtonOutlinedStyle"
+            <Button
                 android:id="@+id/cancel_task_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

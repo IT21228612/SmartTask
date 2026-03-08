@@ -2,34 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-
-    <color name="md_theme_light_primary">#5A4CFF</color>
-    <color name="md_theme_light_onPrimary">#FFFFFFFF</color>
-    <color name="md_theme_light_primaryContainer">#E4E0FF</color>
-    <color name="md_theme_light_onPrimaryContainer">#1A0E6B</color>
-    <color name="md_theme_light_secondary">#3B5BDB</color>
-    <color name="md_theme_light_onSecondary">#FFFFFFFF</color>
-    <color name="md_theme_light_background">#F7F8FC</color>
-    <color name="md_theme_light_onBackground">#171B2A</color>
-    <color name="md_theme_light_surface">#FFFFFFFF</color>
-    <color name="md_theme_light_onSurface">#1D2130</color>
-    <color name="md_theme_light_surfaceVariant">#EEF1FF</color>
-    <color name="md_theme_light_outline">#C8CCE0</color>
-
-    <color name="md_theme_dark_primary">#C2B9FF</color>
-    <color name="md_theme_dark_onPrimary">#2B1F8D</color>
-    <color name="md_theme_dark_primaryContainer">#4336BC</color>
-    <color name="md_theme_dark_onPrimaryContainer">#E7E2FF</color>
-    <color name="md_theme_dark_secondary">#BCC7FF</color>
-    <color name="md_theme_dark_onSecondary">#1D2E7A</color>
-    <color name="md_theme_dark_background">#0F1220</color>
-    <color name="md_theme_dark_onBackground">#E6E9F5</color>
-    <color name="md_theme_dark_surface">#171A29</color>
-    <color name="md_theme_dark_onSurface">#E6E9F5</color>
-    <color name="md_theme_dark_surfaceVariant">#282D42</color>
-    <color name="md_theme_dark_outline">#8F96B3</color>
-
-    <color name="task_completed_background">#FFE7EBF8</color>
-    <color name="swipe_delete_background">#FFE5484D</color>
-    <color name="swipe_edit_background">#FF5A4CFF</color>
+    <color name="task_completed_background">#FFF0F0F0</color>
+    <color name="swipe_delete_background">#FFD32F2F</color>
+    <color name="swipe_edit_background">#FF6A1B9A</color>
 </resources>
