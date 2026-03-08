@@ -26,16 +26,17 @@ android {
 
         // ✅ Kotlin DSL version to load secrets.properties
         val secretsPropsFile = rootProject.file("app/secrets.properties")
-        val mapsApiKey = if (secretsPropsFile.exists()) {
-            val secretsProps = Properties()
+        val secretsProps = Properties()
+        if (secretsPropsFile.exists()) {
             FileInputStream(secretsPropsFile).use { secretsProps.load(it) }
-            secretsProps.getProperty("GOOGLE_MAPS_API_KEY")
-        } else {
-            "YOUR_API_KEY_HERE"
         }
 
-        // Pass the key to the manifest
+        val mapsApiKey = secretsProps.getProperty("GOOGLE_MAPS_API_KEY", "YOUR_API_KEY_HERE")
+        val openAiApiKey = secretsProps.getProperty("OPENAI_API_KEY", "OPENAI_API_KEY_MISSING")
+
+        // Pass local keys to the manifest
         manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = mapsApiKey
+        manifestPlaceholders["OPENAI_API_KEY"] = openAiApiKey
     }
 
     buildTypes {
@@ -75,6 +76,7 @@ dependencies {
     implementation(libs.lifecycle.common.java8)
     implementation(libs.datastore.preferences.rxjava3)
     implementation(libs.datastore.preferences)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
