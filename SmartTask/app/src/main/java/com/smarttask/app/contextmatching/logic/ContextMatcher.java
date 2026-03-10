@@ -16,10 +16,9 @@ public class ContextMatcher {
 
     private static final float IN_APP_THRESHOLD = 35f;
     private static final float NOTIFICATION_THRESHOLD = 65f;
-    private static final long COOLDOWN_MS = 60 * 60 * 1000L;
     private static final float DEFAULT_RADIUS_M = 150f;
 
-    public MatchResult match(ContextSnapshot snapshot, Task task, long nowMs, @Nullable TaskContextMatch previousMatch) {
+    public MatchResult match(ContextSnapshot snapshot, Task task, long nowMs, @Nullable TaskContextMatch previousMatch, int previousNotificationCount) {
         float score = 0f;
         List<String> reasons = new ArrayList<>();
         List<String> blockedBy = new ArrayList<>();
@@ -46,7 +45,7 @@ public class ContextMatcher {
 
         Long cooldownUntil;
         if (shouldTrigger) {
-            cooldownUntil = nowMs + COOLDOWN_MS;
+            cooldownUntil = nowMs + computeCooldownMs(previousNotificationCount);
         } else {
             if (inCooldown) {
                 cooldownUntil = previousMatch.cooldownUntil; //set to existing cooldown if still active  and blocked by cooldown, otherwise clear cooldown if not blocked by cooldown anymore
@@ -64,6 +63,25 @@ public class ContextMatcher {
             triggerType = "NONE";
         }
         return new MatchResult(clamped, reasons, blockedBy, shouldTrigger, triggerType, cooldownUntil);
+    }
+
+    private long computeCooldownMs(int previousNotificationCount) {
+        if (previousNotificationCount <= 0) {
+            return 2L * 60L * 60L * 1000L;
+        }
+        if (previousNotificationCount == 1) {
+            return 4L * 60L * 60L * 1000L;
+        }
+        if (previousNotificationCount == 2) {
+            return 8L * 60L * 60L * 1000L;
+        }
+        if (previousNotificationCount == 3) {
+            return 16L * 60L * 60L * 1000L;
+        }
+        if (previousNotificationCount == 4) {
+            return 24L * 60L * 60L * 1000L;
+        }
+        return previousNotificationCount * 24L * 60L * 60L * 1000L;
     }
 
     private float scoreLocation(ContextSnapshot snapshot, Task task, List<String> reasons) {

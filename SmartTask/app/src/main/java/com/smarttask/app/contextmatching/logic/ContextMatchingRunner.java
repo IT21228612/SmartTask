@@ -52,7 +52,8 @@ public class ContextMatchingRunner {
         List<TriggerCandidate> triggerCandidates = new ArrayList<>();
         for (Task task : activeTasks) {
             TaskContextMatch previous = matchDao.getLatestForTask(task.getId());
-            MatchResult result = matcher.match(snapshot, task, now, previous);
+            int previousNotificationCount = matchDao.getNotificationTriggerCountForTask(task.getId());
+            MatchResult result = matcher.match(snapshot, task, now, previous, previousNotificationCount);
             TaskContextMatch dbMatch = toEntity(task.getId(), snapshot, now, result);
             toPersist.add(dbMatch);
 
