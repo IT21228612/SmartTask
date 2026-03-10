@@ -15,5 +15,5 @@
 
     <color name="task_completed_background">#FFF0F0F0</color>
     <color name="swipe_delete_background">#FFD32F2F</color>
-    <color name="swipe_edit_background">#FF6A1B9A</color>
+    <color name="swipe_edit_background">#FF1DA1F2</color>
 </resources>
