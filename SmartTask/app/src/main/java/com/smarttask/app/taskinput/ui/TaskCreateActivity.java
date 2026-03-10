@@ -58,6 +58,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private EditText descriptionInput;
     private EditText estimatedDurationInput;
     private EditText locationLabelInput;
+    private EditText locationPickerInput;
     private EditText locationRadiusInput;
     private EditText dueDateDisplay;
     private EditText preferredStartDisplay;
@@ -65,7 +66,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private TextInputLayout dueDateLayout;
     private TextInputLayout preferredStartLayout;
     private TextInputLayout preferredEndLayout;
-    private TextInputLayout locationLabelLayout;
+    private TextInputLayout locationPickerLayout;
     private Spinner prioritySpinner;
     private Spinner categorySpinner;
     private Switch notificationsSwitch;
@@ -81,6 +82,8 @@ public class TaskCreateActivity extends AppCompatActivity {
     private Double selectedLng;
     @Nullable
     private String selectedAddress;
+    @Nullable
+    private String selectedLocationName;
 
     private final Calendar calendar = Calendar.getInstance();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault());
@@ -96,6 +99,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         descriptionInput = findViewById(R.id.task_description_input);
         estimatedDurationInput = findViewById(R.id.task_estimated_duration_input);
         locationLabelInput = findViewById(R.id.task_location_label_input);
+        locationPickerInput = findViewById(R.id.task_location_picker_input);
         locationRadiusInput = findViewById(R.id.task_location_radius_input);
         dueDateDisplay = findViewById(R.id.task_due_date_display);
         preferredStartDisplay = findViewById(R.id.task_preferred_start_display);
@@ -103,7 +107,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         dueDateLayout = findViewById(R.id.task_due_date_layout);
         preferredStartLayout = findViewById(R.id.task_preferred_start_layout);
         preferredEndLayout = findViewById(R.id.task_preferred_end_layout);
-        locationLabelLayout = findViewById(R.id.task_location_label_layout);
+        locationPickerLayout = findViewById(R.id.task_location_picker_layout);
         prioritySpinner = findViewById(R.id.task_priority_spinner);
         categorySpinner = findViewById(R.id.task_category_spinner);
         notificationsSwitch = findViewById(R.id.task_notifications_switch);
@@ -141,8 +145,8 @@ public class TaskCreateActivity extends AppCompatActivity {
             selectedPreferredEnd = null;
             updatePreferredEndDisplay();
         });
-        locationLabelInput.setOnClickListener(v -> openLocationPicker());
-        locationLabelLayout.setEndIconOnClickListener(v -> clearLocation());
+        locationPickerInput.setOnClickListener(v -> openLocationPicker());
+        locationPickerLayout.setEndIconOnClickListener(v -> clearLocation());
         saveButton.setOnClickListener(v -> saveTask());
         cancelButton.setOnClickListener(v -> finish());
 
@@ -184,7 +188,9 @@ public class TaskCreateActivity extends AppCompatActivity {
         notificationsSwitch.setChecked(task.isNotificationsEnabled());
         selectedLat = task.getLocationLat();
         selectedLng = task.getLocationLng();
+        selectedLocationName = task.getLocationLabel();
         selectedAddress = task.getLocationLabel();
+        locationPickerInput.setText(selectedAddress);
     }
 
     private void openDueDatePicker() {
@@ -424,6 +430,8 @@ public class TaskCreateActivity extends AppCompatActivity {
         selectedLat = null;
         selectedLng = null;
         selectedAddress = null;
+        selectedLocationName = null;
+        locationPickerInput.setText("");
         locationLabelInput.setText("");
     }
 
@@ -434,6 +442,9 @@ public class TaskCreateActivity extends AppCompatActivity {
             intent.putExtra(MapPickerActivity.EXTRA_INITIAL_LNG, selectedLng);
             if (!TextUtils.isEmpty(selectedAddress)) {
                 intent.putExtra(MapPickerActivity.EXTRA_INITIAL_ADDRESS, selectedAddress);
+            }
+            if (!TextUtils.isEmpty(selectedLocationName)) {
+                intent.putExtra(MapPickerActivity.EXTRA_INITIAL_NAME, selectedLocationName);
             }
         }
         mapPickerLauncher.launch(intent);
@@ -553,6 +564,17 @@ public class TaskCreateActivity extends AppCompatActivity {
         }
     }
 
+
+    @Nullable
+    private String deriveLabelFromAddress(@Nullable String address) {
+        if (TextUtils.isEmpty(address)) {
+            return null;
+        }
+        String[] parts = address.split(",");
+        String label = parts.length > 0 ? parts[0].trim() : address.trim();
+        return TextUtils.isEmpty(label) ? null : label;
+    }
+
     private enum TimeType {
         PREFERRED_START,
         PREFERRED_END
@@ -568,8 +590,15 @@ public class TaskCreateActivity extends AppCompatActivity {
                         selectedLat = lat;
                         selectedLng = lng;
                         selectedAddress = data.getStringExtra(MapPickerActivity.EXTRA_SELECTED_ADDRESS);
+                        selectedLocationName = data.getStringExtra(MapPickerActivity.EXTRA_SELECTED_NAME);
                         if (!TextUtils.isEmpty(selectedAddress)) {
-                            locationLabelInput.setText(selectedAddress);
+                            locationPickerInput.setText(selectedAddress);
+                        }
+                        String label = !TextUtils.isEmpty(selectedLocationName)
+                                ? selectedLocationName
+                                : deriveLabelFromAddress(selectedAddress);
+                        if (!TextUtils.isEmpty(label)) {
+                            locationLabelInput.setText(label);
                         }
                         Toast.makeText(this, R.string.task_location_saved, Toast.LENGTH_SHORT).show();
                     }

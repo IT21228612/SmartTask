@@ -61,15 +61,18 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
     public static final String EXTRA_SELECTED_LAT = "extra_selected_lat";
     public static final String EXTRA_SELECTED_LNG = "extra_selected_lng";
     public static final String EXTRA_SELECTED_ADDRESS = "extra_selected_address";
+    public static final String EXTRA_SELECTED_NAME = "extra_selected_name";
 
     public static final String EXTRA_INITIAL_LAT = "extra_initial_lat";
     public static final String EXTRA_INITIAL_LNG = "extra_initial_lng";
     public static final String EXTRA_INITIAL_ADDRESS = "extra_initial_address";
+    public static final String EXTRA_INITIAL_NAME = "extra_initial_name";
 
     private GoogleMap googleMap;
     private Marker selectedMarker;
     private LatLng selectedLatLng;
     private String selectedAddress;
+    private String selectedPlaceName;
 
     private TextView selectedAddressText;
     private ProgressBar searchProgress;
@@ -165,6 +168,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
             if (!TextUtils.isEmpty(selectedAddress)) {
                 resultIntent.putExtra(EXTRA_SELECTED_ADDRESS, selectedAddress);
             }
+            if (!TextUtils.isEmpty(selectedPlaceName)) {
+                resultIntent.putExtra(EXTRA_SELECTED_NAME, selectedPlaceName);
+            }
             setResult(RESULT_OK, resultIntent);
             finish();
         });
@@ -172,6 +178,7 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         double initialLat = getIntent().getDoubleExtra(EXTRA_INITIAL_LAT, Double.NaN);
         double initialLng = getIntent().getDoubleExtra(EXTRA_INITIAL_LNG, Double.NaN);
         String initialAddress = getIntent().getStringExtra(EXTRA_INITIAL_ADDRESS);
+        selectedPlaceName = getIntent().getStringExtra(EXTRA_INITIAL_NAME);
         if (!Double.isNaN(initialLat) && !Double.isNaN(initialLng)) {
             selectedLatLng = new LatLng(initialLat, initialLng);
             selectedAddress = initialAddress;
@@ -184,7 +191,10 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         googleMap = map;
         googleMap.getUiSettings().setZoomControlsEnabled(true);
         googleMap.getUiSettings().setMapToolbarEnabled(false);
-        googleMap.setOnMapClickListener(latLng -> updateSelection(latLng, null));
+        googleMap.setOnMapClickListener(latLng -> {
+            selectedPlaceName = null;
+            updateSelection(latLng, null);
+        });
 
         if (selectedLatLng != null) {
             moveCamera(selectedLatLng, 15f);
@@ -254,6 +264,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         } else {
             fetchAddressForLatLng(latLng);
         }
+        if (TextUtils.isEmpty(selectedPlaceName)) {
+            selectedPlaceName = deriveNameFromAddress(selectedAddress);
+        }
         updateMarker(latLng);
         updateSelectedAddressText();
     }
@@ -278,6 +291,9 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                 address = null;
             }
             selectedAddress = address;
+            if (TextUtils.isEmpty(selectedPlaceName)) {
+                selectedPlaceName = deriveNameFromAddress(address);
+            }
             mainHandler.post(this::updateSelectedAddressText);
         }).start();
     }
@@ -426,11 +442,12 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
             Toast.makeText(this, R.string.task_location_search_no_results, Toast.LENGTH_SHORT).show();
             return;
         }
-        String placeName = place.getName();  // always use place name
-        if (TextUtils.isEmpty(placeName)) {
-            placeName = place.getAddress(); // fallback to address if name is missing
+        selectedPlaceName = place.getName();
+        String placeAddress = place.getAddress();
+        if (TextUtils.isEmpty(placeAddress)) {
+            placeAddress = selectedPlaceName;
         }
-        updateSelection(latLng, placeName);
+        updateSelection(latLng, placeAddress);
         moveCamera(latLng, 15f);
     }
 
@@ -492,6 +509,17 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         Address address = addresses.get(0);
         String line = address.getAddressLine(0);
         return TextUtils.isEmpty(line) ? null : line;
+    }
+
+
+    @Nullable
+    private String deriveNameFromAddress(@Nullable String address) {
+        if (TextUtils.isEmpty(address)) {
+            return null;
+        }
+        String[] parts = address.split(",");
+        String name = parts.length > 0 ? parts[0].trim() : address.trim();
+        return TextUtils.isEmpty(name) ? null : name;
     }
 
     private RectangularBounds buildLocationBias() {
