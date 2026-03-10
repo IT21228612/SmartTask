@@ -2,6 +2,16 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="theme_primary">#1DA1F2</color>
+    <color name="theme_on_primary">#FFFFFFFF</color>
+    <color name="theme_primary_container">#1DA1F2</color>
+    <color name="theme_on_primary_container">#FFFFFFFF</color>
+    <color name="theme_secondary">#FFFFFFFF</color>
+    <color name="theme_on_secondary">#1DA1F2</color>
+    <color name="theme_secondary_container">#FFFFFFFF</color>
+    <color name="theme_on_secondary_container">#1DA1F2</color>
+
     <color name="task_completed_background">#FFF0F0F0</color>
     <color name="swipe_delete_background">#FFD32F2F</color>
     <color name="swipe_edit_background">#FF6A1B9A</color>
