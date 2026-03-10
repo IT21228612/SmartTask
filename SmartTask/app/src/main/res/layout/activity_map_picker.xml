@@ -9,7 +9,7 @@
         android:id="@+id/map_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
+        android:background="@color/app_background_light_ash"
         android:theme="@style/ThemeOverlay.MaterialComponents.ActionBar"
         app:title="@string/task_location_title" />
 

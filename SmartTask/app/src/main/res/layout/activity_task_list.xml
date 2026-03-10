@@ -14,7 +14,7 @@
             android:id="@+id/task_list_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorSurface"
+            android:background="@color/app_background_light_ash"
             app:menu="@menu/menu_task_list_toolbar"
             app:navigationIcon="@drawable/ic_menu_button"
             app:navigationIconTint="?attr/colorOnSurface"
