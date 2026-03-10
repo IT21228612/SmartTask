@@ -11,6 +11,7 @@
     <color name="theme_on_secondary">#1DA1F2</color>
     <color name="theme_secondary_container">#FFFFFFFF</color>
     <color name="theme_on_secondary_container">#1DA1F2</color>
+    <color name="app_background_light_ash">#FFF5F5F5</color>
 
     <color name="task_completed_background">#FFF0F0F0</color>
     <color name="swipe_delete_background">#FFD32F2F</color>

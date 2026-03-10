@@ -8,5 +8,6 @@
         <item name="colorOnSecondary">@color/theme_on_secondary</item>
         <item name="colorSecondaryContainer">@color/theme_secondary_container</item>
         <item name="colorOnSecondaryContainer">@color/theme_on_secondary_container</item>
+        <item name="android:windowBackground">@color/app_background_light_ash</item>
     </style>
 </resources>
