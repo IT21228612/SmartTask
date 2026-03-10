@@ -2,23 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-
-    <!-- Modern cool-blue palette for light theme -->
-    <color name="md_theme_light_primary">#4F46E5</color>
-    <color name="md_theme_light_onPrimary">#FFFFFFFF</color>
-    <color name="md_theme_light_primaryContainer">#E0E7FF</color>
-    <color name="md_theme_light_onPrimaryContainer">#1E1B4B</color>
-    <color name="md_theme_light_secondary">#0EA5A3</color>
-    <color name="md_theme_light_onSecondary">#FFFFFFFF</color>
-    <color name="md_theme_light_secondaryContainer">#CCFBF1</color>
-    <color name="md_theme_light_onSecondaryContainer">#042F2E</color>
-    <color name="md_theme_light_background">#F8FAFC</color>
-    <color name="md_theme_light_onBackground">#0F172A</color>
-    <color name="md_theme_light_surface">#FFFFFF</color>
-    <color name="md_theme_light_onSurface">#0F172A</color>
-    <color name="md_theme_light_outline">#94A3B8</color>
-
-    <color name="task_completed_background">#FFE2E8F0</color>
-    <color name="swipe_delete_background">#FFEF4444</color>
-    <color name="swipe_edit_background">#FF2563EB</color>
+    <color name="task_completed_background">#FFF0F0F0</color>
+    <color name="swipe_delete_background">#FFD32F2F</color>
+    <color name="swipe_edit_background">#FF6A1B9A</color>
 </resources>
