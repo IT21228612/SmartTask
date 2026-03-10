@@ -43,9 +43,18 @@ public class ContextMatcher {
         }
 
         boolean shouldTrigger = clamped >= NOTIFICATION_THRESHOLD && !blocked;
-        Long cooldownUntil = shouldTrigger
-                ? nowMs + COOLDOWN_MS
-                : (inCooldown ? previousMatch.cooldownUntil : null);
+
+        Long cooldownUntil;
+        if (shouldTrigger) {
+            cooldownUntil = nowMs + COOLDOWN_MS;
+        } else {
+            if (inCooldown) {
+                cooldownUntil = previousMatch.cooldownUntil; //set to existing cooldown if still active  and blocked by cooldown, otherwise clear cooldown if not blocked by cooldown anymore
+            } else {
+                cooldownUntil = null;
+            }
+        }
+
         String triggerType;
         if (shouldTrigger) {
             triggerType = "NOTIFICATION";
