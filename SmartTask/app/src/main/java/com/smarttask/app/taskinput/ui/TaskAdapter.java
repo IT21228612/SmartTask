@@ -92,7 +92,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         private final TextView titleView;
         private final TextView dueDateView;
-        private final TextView priorityView;
+        private final TextView locationLabelView;
         private final ImageView locationIndicator;
         private final CheckBox completedCheckBox;
 
@@ -100,7 +100,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             super(itemView);
             titleView = itemView.findViewById(R.id.item_task_title);
             dueDateView = itemView.findViewById(R.id.item_task_due);
-            priorityView = itemView.findViewById(R.id.item_task_priority);
+            locationLabelView = itemView.findViewById(R.id.item_task_location_label);
             locationIndicator = itemView.findViewById(R.id.item_task_location_icon);
             completedCheckBox = itemView.findViewById(R.id.item_task_completed_checkbox);
         }
@@ -117,8 +117,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 dueDateView.setVisibility(View.GONE);
             }
 
-            priorityView.setText(itemView.getContext().getString(R.string.task_priority_value, getPriorityLabel(task.getPriority())));
-            locationIndicator.setVisibility(task.getLocationLat() != null ? View.VISIBLE : View.GONE);
+            String locationLabel = task.getLocationLabel();
+            if (locationLabel != null && !locationLabel.trim().isEmpty()) {
+                locationLabelView.setText(formatLocationLabel(locationLabel.trim()));
+                locationLabelView.setVisibility(View.VISIBLE);
+                locationIndicator.setVisibility(View.VISIBLE);
+            } else {
+                locationLabelView.setText(null);
+                locationLabelView.setVisibility(View.GONE);
+                locationIndicator.setVisibility(View.GONE);
+            }
             completedCheckBox.setOnCheckedChangeListener(null);
             completedCheckBox.setChecked(task.isCompleted());
             completedCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> listener.onTaskCompletionToggled(task, isChecked));
@@ -128,21 +136,17 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             itemView.setOnLongClickListener(v -> true);
         }
 
-        private String getPriorityLabel(int priority) {
-            switch (priority) {
-                case 2:
-                    return itemView.getContext().getString(R.string.task_priority_high);
-                case 1:
-                    return itemView.getContext().getString(R.string.task_priority_medium);
-                default:
-                    return itemView.getContext().getString(R.string.task_priority_low);
+        private String formatLocationLabel(String locationLabel) {
+            if (locationLabel.length() > 50) {
+                return locationLabel.substring(0, 50) + "...";
             }
+            return locationLabel;
         }
 
         private void applyCompletionStyles(boolean isCompleted) {
             setStrikeThrough(titleView, isCompleted);
             setStrikeThrough(dueDateView, isCompleted);
-            setStrikeThrough(priorityView, isCompleted);
+            setStrikeThrough(locationLabelView, isCompleted);
 
             CardView cardView = (CardView) itemView;
             int backgroundColor = ContextCompat.getColor(
