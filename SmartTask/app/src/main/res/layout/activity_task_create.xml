@@ -152,49 +152,24 @@
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/task_location_label_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/task_location_button"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/task_add_location"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/task_clear_location_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/task_clear_location"
-                android:textAllCaps="false" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/task_location_display"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/task_location_not_set"
-            android:textAppearance="?attr/textAppearanceBodyMedium" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="@string/task_location_label">
+            android:hint="@string/task_pick_location_hint"
+            app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
+            app:endIconMode="custom"
+            app:startIconDrawable="@drawable/ic_location_pin_red">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/task_location_label_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textCapSentences" />
+                android:clickable="true"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout

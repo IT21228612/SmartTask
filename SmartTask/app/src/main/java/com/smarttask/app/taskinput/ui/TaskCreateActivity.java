@@ -5,15 +5,12 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -68,6 +65,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private TextInputLayout dueDateLayout;
     private TextInputLayout preferredStartLayout;
     private TextInputLayout preferredEndLayout;
+    private TextInputLayout locationLabelLayout;
     private Spinner prioritySpinner;
     private Spinner categorySpinner;
     private Switch notificationsSwitch;
@@ -105,28 +103,12 @@ public class TaskCreateActivity extends AppCompatActivity {
         dueDateLayout = findViewById(R.id.task_due_date_layout);
         preferredStartLayout = findViewById(R.id.task_preferred_start_layout);
         preferredEndLayout = findViewById(R.id.task_preferred_end_layout);
+        locationLabelLayout = findViewById(R.id.task_location_label_layout);
         prioritySpinner = findViewById(R.id.task_priority_spinner);
         categorySpinner = findViewById(R.id.task_category_spinner);
         notificationsSwitch = findViewById(R.id.task_notifications_switch);
-        TextView locationDisplay = findViewById(R.id.task_location_display);
-        Button locationButton = findViewById(R.id.task_location_button);
-        Button clearLocationButton = findViewById(R.id.task_clear_location_button);
         Button saveButton = findViewById(R.id.save_task_button);
         Button cancelButton = findViewById(R.id.cancel_task_button);
-        locationLabelInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                updateLocationDisplay(locationDisplay);
-            }
-        });
 
         ArrayAdapter<CharSequence> priorityAdapter = ArrayAdapter.createFromResource(
                 this,
@@ -159,18 +141,16 @@ public class TaskCreateActivity extends AppCompatActivity {
             selectedPreferredEnd = null;
             updatePreferredEndDisplay();
         });
-        locationButton.setOnClickListener(v -> openLocationPicker());
-        clearLocationButton.setOnClickListener(v -> clearLocation(locationDisplay));
+        locationLabelInput.setOnClickListener(v -> openLocationPicker());
+        locationLabelLayout.setEndIconOnClickListener(v -> clearLocation());
         saveButton.setOnClickListener(v -> saveTask());
         cancelButton.setOnClickListener(v -> finish());
 
         long taskId = getIntent().getLongExtra(EXTRA_TASK_ID, -1L);
         if (taskId != -1L) {
             loadTask(taskId);
-            locationButton.setText(R.string.task_update_location);
         } else {
             createdAt = System.currentTimeMillis();
-            updateLocationDisplay(locationDisplay);
             notificationsSwitch.setChecked(true);
             locationRadiusInput.setText(String.valueOf(DEFAULT_LOCATION_RADIUS_METERS));
             applyVoicePrefill();
@@ -205,7 +185,6 @@ public class TaskCreateActivity extends AppCompatActivity {
         selectedLat = task.getLocationLat();
         selectedLng = task.getLocationLng();
         selectedAddress = task.getLocationLabel();
-        updateLocationDisplay(findViewById(R.id.task_location_display));
     }
 
     private void openDueDatePicker() {
@@ -441,12 +420,11 @@ public class TaskCreateActivity extends AppCompatActivity {
         finish();
     }
 
-    private void clearLocation(TextView locationDisplay) {
+    private void clearLocation() {
         selectedLat = null;
         selectedLng = null;
         selectedAddress = null;
         locationLabelInput.setText("");
-        updateLocationDisplay(locationDisplay);
     }
 
     private void openLocationPicker() {
@@ -459,26 +437,6 @@ public class TaskCreateActivity extends AppCompatActivity {
             }
         }
         mapPickerLauncher.launch(intent);
-    }
-
-    private void updateLocationDisplay(TextView locationDisplay) {
-        if (selectedLat != null && selectedLng != null) {
-            String addressText = getLocationDisplayLabel();
-            if (TextUtils.isEmpty(addressText)) {
-                addressText = getString(R.string.task_location_coordinates, selectedLat, selectedLng);
-            }
-            locationDisplay.setText(getString(R.string.task_location_selected, addressText));
-        } else {
-            locationDisplay.setText(R.string.task_location_not_set);
-        }
-    }
-
-    private String getLocationDisplayLabel() {
-        String label = locationLabelInput.getText().toString().trim();
-        if (!TextUtils.isEmpty(label)) {
-            return label;
-        }
-        return selectedAddress;
     }
 
     private void applyVoicePrefill() {
@@ -613,7 +571,6 @@ public class TaskCreateActivity extends AppCompatActivity {
                         if (!TextUtils.isEmpty(selectedAddress)) {
                             locationLabelInput.setText(selectedAddress);
                         }
-                        updateLocationDisplay(findViewById(R.id.task_location_display));
                         Toast.makeText(this, R.string.task_location_saved, Toast.LENGTH_SHORT).show();
                     }
                 }

@@ -42,6 +42,7 @@
     <string name="task_category_personal">Personal</string>
     <string name="task_estimated_duration_label">Estimated duration (minutes)</string>
     <string name="task_location_label">Location label</string>
+    <string name="task_pick_location_hint">Pick Task Location</string>
     <string name="task_location_radius_label">Location radius (meters)</string>
     <string name="task_notifications_label">Enable notifications</string>
     <string name="task_preferred_start_label">Preferred start</string>
