@@ -47,8 +47,7 @@
             android:layout_height="20dp"
             android:layout_marginTop="4dp"
             android:contentDescription="@string/task_location_indicator"
-            android:src="@android:drawable/ic_menu_mylocation"
-            android:tint="@android:color/holo_red_dark"
+            android:src="@drawable/ic_location_pin_red"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/item_task_due" />
 
