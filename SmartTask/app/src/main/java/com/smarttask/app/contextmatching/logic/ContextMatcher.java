@@ -43,7 +43,9 @@ public class ContextMatcher {
         }
 
         boolean shouldTrigger = clamped >= NOTIFICATION_THRESHOLD && !blocked;
-        Long cooldownUntil = shouldTrigger ? nowMs + COOLDOWN_MS : null;
+        Long cooldownUntil = shouldTrigger
+                ? nowMs + COOLDOWN_MS
+                : (inCooldown ? previousMatch.cooldownUntil : null);
         String triggerType;
         if (shouldTrigger) {
             triggerType = "NOTIFICATION";
