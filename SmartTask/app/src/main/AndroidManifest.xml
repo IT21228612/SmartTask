@@ -27,6 +27,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartTask"
         tools:targetApi="31">
+        <activity android:name=".taskinput.ui.ExecuteSqlQueriesActivity" />
         <activity android:name=".taskinput.ui.DatabaseViewerActivity" />
         <activity android:name=".taskinput.ui.DebugActivity" />
         <activity android:name=".taskinput.ui.SettingsActivity" />
