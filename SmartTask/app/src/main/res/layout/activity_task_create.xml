@@ -202,7 +202,9 @@
             <Switch
                 android:id="@+id/task_notifications_switch"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:thumbTint="@color/task_notifications_switch_thumb_tint"
+                android:trackTint="@color/task_notifications_switch_track_tint" />
         </LinearLayout>
 
         <LinearLayout
