@@ -52,6 +52,8 @@ public class TaskCreateActivity extends AppCompatActivity {
     public static final String EXTRA_PREFILL_LOCATION_RADIUS = "prefill_location_radius";
     public static final String EXTRA_PREFILL_NOTIFICATIONS = "prefill_notifications";
     private static final int DEFAULT_LOCATION_RADIUS_METERS = 30;
+    private static final int SYSTEM_DATE_PICKER_THEME = android.R.style.Theme_DeviceDefault_Dialog;
+    private static final int SYSTEM_TIME_PICKER_THEME = android.R.style.Theme_DeviceDefault_Dialog;
 
     private TaskDao taskDao;
     private EditText titleInput;
@@ -191,6 +193,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         calendar.setTimeInMillis(selectedDueDate != null ? selectedDueDate : System.currentTimeMillis());
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
+                SYSTEM_DATE_PICKER_THEME,
                 (view, year, month, dayOfMonth) -> {
                     calendar.set(Calendar.YEAR, year);
                     calendar.set(Calendar.MONTH, month);
@@ -207,6 +210,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private void openTimePicker(Calendar calendar) {
         TimePickerDialog timePickerDialog = new TimePickerDialog(
                 this,
+                SYSTEM_TIME_PICKER_THEME,
                 (view, hourOfDay, minute) -> {
                     calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                     calendar.set(Calendar.MINUTE, minute);
@@ -226,6 +230,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         calendar.setTimeInMillis(getInitialTimeForType(timeType));
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
+                SYSTEM_DATE_PICKER_THEME,
                 (view, year, month, dayOfMonth) -> {
                     calendar.set(Calendar.YEAR, year);
                     calendar.set(Calendar.MONTH, month);
@@ -247,6 +252,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private void openTimePickerForType(TimeType timeType, Calendar calendar) {
         TimePickerDialog timePickerDialog = new TimePickerDialog(
                 this,
+                SYSTEM_TIME_PICKER_THEME,
                 (view, hourOfDay, minute) -> {
                     calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                     calendar.set(Calendar.MINUTE, minute);
