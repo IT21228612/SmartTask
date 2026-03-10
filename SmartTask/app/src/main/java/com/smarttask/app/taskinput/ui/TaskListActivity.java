@@ -318,7 +318,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         voiceInputDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.voice_command_task)
                 .setView(dialogView)
-                .setNegativeButton(android.R.string.cancel, (dialog, which) -> stopVoiceSession(false))
+               // .setNegativeButton(android.R.string.cancel, (dialog, which) -> stopVoiceSession(false))
                 .setOnDismissListener(dialog -> stopVoiceSession(false))
                 .create();
         voiceInputDialog.show();
