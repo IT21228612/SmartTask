@@ -23,6 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:gravity="center"
         android:text="@string/voice_status_stopped"
         android:textAppearance="?attr/textAppearanceBodyMedium" />
 
@@ -31,6 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
+        android:gravity="center"
         android:minHeight="72dp"
         android:text="@string/voice_listening_hint"
         android:textAppearance="?attr/textAppearanceBodyLarge" />
@@ -39,20 +41,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:gravity="end"
+        android:gravity="center"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/voice_restart_button"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/voice_restart" />
 
         <Button
             android:id="@+id/voice_done_button"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
+            android:layout_weight="1"
             android:text="@string/voice_done" />
     </LinearLayout>
 
