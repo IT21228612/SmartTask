@@ -22,6 +22,7 @@ public class DebugActivity extends AppCompatActivity {
 
         View databaseButton = findViewById(R.id.debug_view_database_button);
         View logButton = findViewById(R.id.debug_view_log_button);
+        View executeSqlButton = findViewById(R.id.debug_execute_sql_button);
 
         databaseButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, DatabaseViewerActivity.class);
@@ -30,6 +31,11 @@ public class DebugActivity extends AppCompatActivity {
 
         logButton.setOnClickListener(v -> {
             // Intentionally left blank for future log viewer implementation
+        });
+
+        executeSqlButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ExecuteSqlQueriesActivity.class);
+            startActivity(intent);
         });
     }
 }
