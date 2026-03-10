@@ -92,8 +92,8 @@
 Context relevance: %2$s
 Signals: %3$s</string>
     <string name="notification_action_done">Done</string>
-    <string name="notification_action_snooze">Snooze</string>
-    <string name="notification_action_postpone">Postpone</string>
+    <string name="notification_action_snooze">Snooze 1h</string>
+    <string name="notification_action_postpone">Due +24h</string>
     <string name="voice_command_task">Create task by voice</string>
     <string name="voice_listening">Listening…</string>
     <string name="voice_processing">Processing voice command…</string>
