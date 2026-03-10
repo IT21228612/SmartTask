@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 
 public class NotificationActionReceiver extends BroadcastReceiver {
 
-    private static final long SNOOZE_MS = 30 * 60 * 1000L;
+    private static final long SNOOZE_MS = 60 * 60 * 1000L;
     private static final long POSTPONE_MS = 60 * 60 * 1000L;
 
     @Override
