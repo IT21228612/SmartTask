@@ -6,7 +6,7 @@
     <string name="task_due_date_not_set">No due date</string>
     <string name="task_clear_due_date">Clear</string>
     <string name="task_priority_label">Priority</string>
-    <string name="save_task">Save task</string>
+    <string name="save_task">Save</string>
     <string name="cancel">Cancel</string>
     <string name="add_task">Add task</string>
     <string name="task_empty_state">No tasks yet. Tap + to create one.</string>
