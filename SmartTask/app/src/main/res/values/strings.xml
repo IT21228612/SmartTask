@@ -102,7 +102,7 @@ Signals: %3$s</string>
     <string name="voice_fallback_used">Couldn\'t parse voice command, opened fallback task draft.</string>
     <string name="voice_done">Done</string>
     <string name="voice_restart">Restart</string>
-    <string name="voice_listening_hint">Tap the microphone to start listening. If listening stops after a pause, tap the microphone again, then tap Done to submit or Restart to clear and try again.</string>
+    <string name="voice_listening_hint">Tap the mic to start listening.</string>
     <string name="voice_status_listening">Listening</string>
     <string name="voice_status_stopped">Stopped</string>
     <string name="voice_action_pause_listening">Tap microphone to stop listening</string>
