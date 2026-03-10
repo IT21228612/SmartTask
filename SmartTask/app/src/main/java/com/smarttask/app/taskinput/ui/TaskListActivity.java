@@ -16,7 +16,6 @@ import android.speech.SpeechRecognizer;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -60,6 +59,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TaskListActivity extends AppCompatActivity implements TaskAdapter.TaskClickListener {
+
+    private static final long VOICE_COMPLETE_SILENCE_LENGTH_MS = 2000L;
+    private static final long VOICE_POSSIBLY_COMPLETE_SILENCE_LENGTH_MS = 1500L;
+    private static final long VOICE_MINIMUM_INPUT_LENGTH_MS = 1000L;
 
     private TaskDao taskDao;
     private VoiceCommandLogDao voiceCommandLogDao;
@@ -326,7 +329,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         doneButton.setOnClickListener(v -> finishVoiceInputFromDialog());
         restartButton.setOnClickListener(v -> restartVoiceInputFromDialog());
         if (voiceStateIcon != null) {
-            voiceStateIcon.setOnTouchListener((v, event) -> handleVoiceIconTouch(event));
+            voiceStateIcon.setOnClickListener(v -> toggleSpeechListeningFromDialog());
         }
 
         resetCurrentVoiceTranscript();
@@ -351,7 +354,7 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
 
             @Override
             public void onBeginningOfSpeech() {
-                // Listening state is controlled by mic press-and-hold only.
+                // No-op.
             }
 
             @Override
@@ -367,6 +370,9 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             @Override
             public void onEndOfSpeech() {
                 isRecognizerListening = false;
+                isVoiceListeningPaused = true;
+                isManualVoiceStopRequested = true;
+                setVoiceListeningState(false);
             }
 
             @Override
@@ -378,8 +384,9 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 if (error == SpeechRecognizer.ERROR_NO_MATCH
                         || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
                         || error == SpeechRecognizer.ERROR_CLIENT) {
-                    // Keep listening while the user is still pressing and holding the mic icon.
-                    scheduleSpeechRestart(150L);
+                    isVoiceListeningPaused = true;
+                    isManualVoiceStopRequested = true;
+                    setVoiceListeningState(false);
                     return;
                 }
                 Toast.makeText(TaskListActivity.this, R.string.voice_not_supported, Toast.LENGTH_SHORT).show();
@@ -393,10 +400,9 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
                 if (textResults != null && !textResults.isEmpty()) {
                     appendFinalVoiceResult(textResults.get(0));
                 }
-                if (isVoiceSessionActive && !isManualVoiceStopRequested) {
-                    // Continue recognition while the mic icon is being held.
-                    scheduleSpeechRestart(150L);
-                }
+                isVoiceListeningPaused = true;
+                isManualVoiceStopRequested = true;
+                setVoiceListeningState(false);
             }
 
             @Override
@@ -414,37 +420,15 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
         });
     }
 
-    private void scheduleSpeechRestart(long delayMs) {
-        mainHandler.postDelayed(() -> {
-            if (!isVoiceSessionActive || isManualVoiceStopRequested || isVoiceListeningPaused || speechRecognizer == null || speechRecognizerIntent == null) {
-                return;
-            }
-            if (isRecognizerListening) {
-                return;
-            }
-            speechRecognizer.startListening(speechRecognizerIntent);
-        }, delayMs);
-    }
-
-    private boolean handleVoiceIconTouch(MotionEvent event) {
+    private void toggleSpeechListeningFromDialog() {
         if (!isVoiceSessionActive) {
-            return false;
+            return;
         }
-        int action = event.getActionMasked();
-        if (action == MotionEvent.ACTION_DOWN) {
-            resumeSpeechListeningFromDialog();
-            return true;
-        }
-        if (action == MotionEvent.ACTION_UP) {
+        if (isRecognizerListening) {
             pauseSpeechListeningFromDialog();
-            return true;
+        } else {
+            resumeSpeechListeningFromDialog();
         }
-        if (action == MotionEvent.ACTION_CANCEL) {
-            // Some devices dispatch ACTION_CANCEL while the finger is still held on the mic icon.
-            // Keep listening active to avoid unexpected auto on/off toggles mid-press.
-            return true;
-        }
-        return false;
     }
 
     private void pauseSpeechListeningFromDialog() {
@@ -468,6 +452,10 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
             speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+            // Hint Android speech engines to wait longer before auto-stopping on silence.
+            speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, VOICE_COMPLETE_SILENCE_LENGTH_MS);
+            speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, VOICE_POSSIBLY_COMPLETE_SILENCE_LENGTH_MS);
+            speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, VOICE_MINIMUM_INPUT_LENGTH_MS);
         }
         isManualVoiceStopRequested = false;
         isVoiceListeningPaused = false;
