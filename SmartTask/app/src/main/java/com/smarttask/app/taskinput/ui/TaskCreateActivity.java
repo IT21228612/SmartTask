@@ -22,6 +22,9 @@ import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.textfield.TextInputLayout;
 import com.smarttask.app.R;
 import com.smarttask.app.contextacquisition.api.ContextEngine;
+import com.smarttask.app.descriptioninsights.db.TaskDescriptionInsight;
+import com.smarttask.app.descriptioninsights.db.TaskDescriptionInsightDao;
+import com.smarttask.app.descriptioninsights.logic.TaskDescriptionInsightAnalyzer;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
@@ -57,6 +60,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private static final int SYSTEM_TIME_PICKER_THEME = android.R.style.Theme_DeviceDefault_Dialog;
 
     private TaskDao taskDao;
+    private TaskDescriptionInsightDao taskDescriptionInsightDao;
     private EditText titleInput;
     private EditText descriptionInput;
     private EditText estimatedDurationInput;
@@ -94,6 +98,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         setContentView(R.layout.activity_task_create);
 
         taskDao = TaskDatabase.getInstance(this).taskDao();
+        taskDescriptionInsightDao = TaskDatabase.getInstance(this).taskDescriptionInsightDao();
 
         titleInput = findViewById(R.id.task_title_input);
         descriptionInput = findViewById(R.id.task_description_input);
@@ -415,9 +420,11 @@ public class TaskCreateActivity extends AppCompatActivity {
             task.setId(editingTaskId);
             task.setUpdatedAt(now);
             taskDao.updateTask(task);
+            upsertDescriptionInsights(task);
         } else {
             long newId = taskDao.insertTask(task);
             task.setId(newId);
+            upsertDescriptionInsights(task);
             UsageStatsTracker.logTaskCreated(this, newId);
         }
 
@@ -433,6 +440,39 @@ public class TaskCreateActivity extends AppCompatActivity {
         selectedLng = null;
         selectedAddress = null;
         locationLabelInput.setText("");
+    }
+
+    private void upsertDescriptionInsights(Task task) {
+        TaskDescriptionInsightAnalyzer.AnalysisResult result = new TaskDescriptionInsightAnalyzer().analyze(this, task);
+        if (result == null) {
+            return;
+        }
+
+        TaskDescriptionInsight existing = taskDescriptionInsightDao.getByTaskId(task.getId());
+        long now = System.currentTimeMillis();
+        if (existing == null) {
+            TaskDescriptionInsight insight = new TaskDescriptionInsight();
+            insight.taskId = task.getId();
+            insight.descriptionHash = result.descriptionHash;
+            insight.riskIfDelayed = result.riskIfDelayed;
+            insight.requiresDeepFocus = result.requiresDeepFocus;
+            insight.dependencyBlocked = result.dependencyBlocked;
+            insight.suggestedDurationMin = result.suggestedDurationMin;
+            insight.rawJson = result.rawJson;
+            insight.model = result.model;
+            insight.updatedAt = now;
+            taskDescriptionInsightDao.insert(insight);
+        } else {
+            existing.descriptionHash = result.descriptionHash;
+            existing.riskIfDelayed = result.riskIfDelayed;
+            existing.requiresDeepFocus = result.requiresDeepFocus;
+            existing.dependencyBlocked = result.dependencyBlocked;
+            existing.suggestedDurationMin = result.suggestedDurationMin;
+            existing.rawJson = result.rawJson;
+            existing.model = result.model;
+            existing.updatedAt = now;
+            taskDescriptionInsightDao.update(existing);
+        }
     }
 
     private void openLocationPicker() {

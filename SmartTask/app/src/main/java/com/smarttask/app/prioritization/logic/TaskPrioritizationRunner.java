@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 import com.smarttask.app.contextacquisition.db.ContextDatabase;
 import com.smarttask.app.contextacquisition.db.ContextSnapshot;
 import com.smarttask.app.contextmatching.db.TaskContextMatch;
+import com.smarttask.app.descriptioninsights.db.TaskDescriptionInsight;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TaskPrioritizationRunner {
 
@@ -45,15 +47,21 @@ public class TaskPrioritizationRunner {
         long nowMs = System.currentTimeMillis();
         List<Task> activeTasks = taskDao.getActiveIncompleteTasksForPrioritization();
         List<TaskContextMatch> matches = taskDatabase.taskContextMatchDao().getBySnapshotId(snapshotId);
+        List<Long> taskIds = activeTasks.stream().map(Task::getId).collect(Collectors.toList());
+        List<TaskDescriptionInsight> insights = taskDatabase.taskDescriptionInsightDao().getByTaskIds(taskIds);
 
         Map<Long, TaskContextMatch> matchByTaskId = new HashMap<>();
         for (TaskContextMatch match : matches) {
             matchByTaskId.put(match.taskId, match);
         }
+        Map<Long, TaskDescriptionInsight> insightByTaskId = new HashMap<>();
+        for (TaskDescriptionInsight insight : insights) {
+            insightByTaskId.put(insight.taskId, insight);
+        }
 
         List<PrioritizedTask> prioritized = new ArrayList<>();
         for (Task task : activeTasks) {
-            prioritized.add(taskScorer.score(task, snapshot, matchByTaskId.get(task.getId()), nowMs));
+            prioritized.add(taskScorer.score(task, snapshot, matchByTaskId.get(task.getId()), insightByTaskId.get(task.getId()), nowMs));
         }
 
         prioritized.sort(buildComparator());
