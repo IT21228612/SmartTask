@@ -13,7 +13,7 @@ import com.smarttask.app.descriptioninsights.db.TaskDescriptionInsightDao;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLog;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLogDao;
 
-@Database(entities = {Task.class, TaskContextMatch.class, VoiceCommandLog.class, UsageStatEvent.class, TaskDescriptionInsight.class}, version = 8, exportSchema = false)
+@Database(entities = {Task.class, TaskContextMatch.class, VoiceCommandLog.class, UsageStatEvent.class, TaskDescriptionInsight.class}, version = 10, exportSchema = false)
 public abstract class TaskDatabase extends RoomDatabase {
 
     private static volatile TaskDatabase INSTANCE;

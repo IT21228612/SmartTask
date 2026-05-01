@@ -75,9 +75,11 @@ public class TaskDescriptionInsightAnalyzer {
                 AnalysisResult result = new AnalysisResult();
                 result.riskIfDelayed = clamp((float) parsed.optDouble("risk_if_delayed", 0d), 0f, 100f);
                 result.requiresDeepFocus = parsed.optBoolean("requires_deep_focus", false);
-                result.dependencyBlocked = parsed.optBoolean("dependency_blocked", false);
                 int duration = parsed.optInt("suggested_duration_min", -1);
                 result.suggestedDurationMin = duration > 0 ? duration : null;
+                result.complexityLevel = clamp(parsed.optInt("complexity_level", 0), 0, 5);
+                result.energyDemand = clamp(parsed.optInt("energy_demand", 0), 0, 5);
+                result.relationshipValue = clamp(parsed.optInt("relationship_value", 0), 0, 5);
                 result.rawJson = parsed.toString();
                 result.model = MODEL;
                 result.descriptionHash = sha256(description);
@@ -96,7 +98,16 @@ public class TaskDescriptionInsightAnalyzer {
 
         JSONArray input = new JSONArray();
         input.put(new JSONObject().put("role", "system").put("content",
-                "Analyze a task description for prioritization. Return strict JSON only."));
+                "Analyze task title and description for prioritization.\n"
+                        + "Return strict JSON only.\n"
+                        + "Field meanings:\n"
+                        + "- risk_if_delayed: 0-100, impact if delayed.\n"
+                        + "- requires_deep_focus: true if sustained concentration needed.\n"
+                        + "- suggested_duration_min: estimated focused minutes.\n"
+                        + "- complexity_level: 0-5 complexity of task.\n"
+                        + "- energy_demand: 0-5 mental/physical energy required.\n"
+                        + "- relationship_value: 0-5 emotional/relationship/family value.\n"
+                        + "Use conservative values when uncertain."));
         input.put(new JSONObject().put("role", "user").put("content",
                 "Title: " + task.getTitle() + "\nDescription: " + (task.getDescription() == null ? "" : task.getDescription())));
         request.put("input", input);
@@ -107,14 +118,18 @@ public class TaskDescriptionInsightAnalyzer {
         JSONObject props = new JSONObject();
         props.put("risk_if_delayed", new JSONObject().put("type", "number"));
         props.put("requires_deep_focus", new JSONObject().put("type", "boolean"));
-        props.put("dependency_blocked", new JSONObject().put("type", "boolean"));
         props.put("suggested_duration_min", new JSONObject().put("type", "integer"));
+        props.put("complexity_level", new JSONObject().put("type", "integer"));
+        props.put("energy_demand", new JSONObject().put("type", "integer"));
+        props.put("relationship_value", new JSONObject().put("type", "integer"));
         schema.put("properties", props);
         schema.put("required", new JSONArray()
                 .put("risk_if_delayed")
                 .put("requires_deep_focus")
-                .put("dependency_blocked")
-                .put("suggested_duration_min"));
+                .put("suggested_duration_min")
+                .put("complexity_level")
+                .put("energy_demand")
+                .put("relationship_value"));
 
         request.put("text", new JSONObject().put("format", new JSONObject()
                 .put("type", "json_schema")
@@ -156,10 +171,16 @@ public class TaskDescriptionInsightAnalyzer {
     public static class AnalysisResult {
         public float riskIfDelayed;
         public boolean requiresDeepFocus;
-        public boolean dependencyBlocked;
         @Nullable public Integer suggestedDurationMin;
+        public int complexityLevel;
+        public int energyDemand;
+        public int relationshipValue;
         public String descriptionHash;
         public String rawJson;
         public String model;
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

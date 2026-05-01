@@ -23,9 +23,9 @@ public class DescriptionInsightScoreAdapter {
             }
         }
 
-        if (insight.dependencyBlocked) {
-            boost -= 6f;
-        }
+        boost += insight.complexityLevel * 0.8f;
+        boost -= insight.energyDemand * 0.6f;
+        boost += insight.relationshipValue * 1.2f;
 
         return clamp(boost, -12f, 12f);
     }
