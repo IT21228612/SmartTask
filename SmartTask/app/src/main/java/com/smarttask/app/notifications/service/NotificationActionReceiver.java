@@ -10,11 +10,13 @@ import androidx.core.app.NotificationManagerCompat;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
+import com.smarttask.app.taskinput.db.UsageStatsTracker;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class NotificationActionReceiver extends BroadcastReceiver {
+    public static final String ACTION_NOTIFICATION_DISMISSED = "com.smarttask.app.notifications.ACTION_DISMISSED";
 
     private static final long SNOOZE_MS = 60 * 60 * 1000L;
     private static final long POSTPONE_MS = 24 * 60 * 60 * 1000L;
@@ -33,15 +35,22 @@ public class NotificationActionReceiver extends BroadcastReceiver {
 
         Context appContext = context.getApplicationContext();
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> handleAction(appContext, intent.getAction(), taskId));
+        executor.execute(() -> handleAction(appContext, intent.getAction(), taskId, notificationId));
         executor.shutdown();
 
-        if (notificationId >= 0) {
+        if (notificationId >= 0 && !ACTION_NOTIFICATION_DISMISSED.equals(intent.getAction())) {
             NotificationManagerCompat.from(appContext).cancel(notificationId);
         }
     }
 
-    private void handleAction(@NonNull Context context, @NonNull String action, long taskId) {
+    private void handleAction(@NonNull Context context, @NonNull String action, long taskId, int notificationId) {
+        if (ACTION_NOTIFICATION_DISMISSED.equals(action)) {
+            if (notificationId >= 0) {
+                UsageStatsTracker.logNotificationIgnoredIfNeeded(context, taskId, notificationId);
+            }
+            return;
+        }
+
         TaskDao taskDao = TaskDatabase.getInstance(context).taskDao();
         Task task = taskDao.getTaskById(taskId);
         if (task == null) {
@@ -68,5 +77,11 @@ public class NotificationActionReceiver extends BroadcastReceiver {
 
         task.setUpdatedAt(now);
         taskDao.updateTask(task);
+        if (notificationId >= 0) {
+            UsageStatsTracker.logNotificationActioned(context, taskId, notificationId);
+        }
+        if (NotificationManager.ACTION_DONE.equals(action)) {
+            UsageStatsTracker.logTaskCompleted(context, taskId);
+        }
     }
 }

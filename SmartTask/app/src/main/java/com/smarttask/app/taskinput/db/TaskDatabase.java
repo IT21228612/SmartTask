@@ -11,7 +11,7 @@ import com.smarttask.app.contextmatching.db.TaskContextMatchDao;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLog;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLogDao;
 
-@Database(entities = {Task.class, TaskContextMatch.class, VoiceCommandLog.class}, version = 6, exportSchema = false)
+@Database(entities = {Task.class, TaskContextMatch.class, VoiceCommandLog.class, UsageStatEvent.class}, version = 7, exportSchema = false)
 public abstract class TaskDatabase extends RoomDatabase {
 
     private static volatile TaskDatabase INSTANCE;
@@ -21,6 +21,7 @@ public abstract class TaskDatabase extends RoomDatabase {
     public abstract TaskContextMatchDao taskContextMatchDao();
 
     public abstract VoiceCommandLogDao voiceCommandLogDao();
+    public abstract UsageStatDao usageStatDao();
 
     public static TaskDatabase getInstance(Context context) {
         if (INSTANCE == null) {

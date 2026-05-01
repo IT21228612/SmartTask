@@ -52,6 +52,12 @@ public interface TaskDao {
     @Query("SELECT MIN(displayOrder) FROM tasks")
     Long getMinDisplayOrder();
 
+    @Query("SELECT COUNT(*) FROM tasks")
+    int getTotalTaskCount();
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE completed = 1")
+    int getTotalCompletedTaskCount();
+
     @Update
     void updateTasks(List<Task> tasks);
 }

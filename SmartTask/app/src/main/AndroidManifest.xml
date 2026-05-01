@@ -30,6 +30,7 @@
         <activity android:name=".taskinput.ui.ExecuteSqlQueriesActivity" />
         <activity android:name=".taskinput.ui.DatabaseViewerActivity" />
         <activity android:name=".taskinput.ui.DebugActivity" />
+        <activity android:name=".taskinput.ui.UsageStatsActivity" />
         <activity android:name=".taskinput.ui.SettingsActivity" />
         <activity android:name=".taskinput.ui.MapPickerActivity" />
         <activity android:name=".taskinput.ui.TaskCreateActivity" />
