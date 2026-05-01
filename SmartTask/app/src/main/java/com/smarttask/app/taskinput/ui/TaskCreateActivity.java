@@ -459,8 +459,10 @@ public class TaskCreateActivity extends AppCompatActivity {
             insight.descriptionHash = result.descriptionHash;
             insight.riskIfDelayed = result.riskIfDelayed;
             insight.requiresDeepFocus = result.requiresDeepFocus;
-            insight.dependencyBlocked = result.dependencyBlocked;
             insight.suggestedDurationMin = result.suggestedDurationMin;
+            insight.complexityLevel = result.complexityLevel;
+            insight.energyDemand = result.energyDemand;
+            insight.relationshipValue = result.relationshipValue;
             insight.rawJson = result.rawJson;
             insight.model = result.model;
             insight.updatedAt = now;
@@ -470,8 +472,10 @@ public class TaskCreateActivity extends AppCompatActivity {
             existing.descriptionHash = result.descriptionHash;
             existing.riskIfDelayed = result.riskIfDelayed;
             existing.requiresDeepFocus = result.requiresDeepFocus;
-            existing.dependencyBlocked = result.dependencyBlocked;
             existing.suggestedDurationMin = result.suggestedDurationMin;
+            existing.complexityLevel = result.complexityLevel;
+            existing.energyDemand = result.energyDemand;
+            existing.relationshipValue = result.relationshipValue;
             existing.rawJson = result.rawJson;
             existing.model = result.model;
             existing.updatedAt = now;

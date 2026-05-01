@@ -24,12 +24,18 @@ public class TaskDescriptionInsight {
     @ColumnInfo(name = "requiresDeepFocus", defaultValue = "0")
     public boolean requiresDeepFocus;
 
-    @ColumnInfo(name = "dependencyBlocked", defaultValue = "0")
-    public boolean dependencyBlocked;
-
     @Nullable
     @ColumnInfo(name = "suggestedDurationMin")
     public Integer suggestedDurationMin;
+
+    @ColumnInfo(name = "complexityLevel", defaultValue = "0")
+    public int complexityLevel;
+
+    @ColumnInfo(name = "energyDemand", defaultValue = "0")
+    public int energyDemand;
+
+    @ColumnInfo(name = "relationshipValue", defaultValue = "0")
+    public int relationshipValue;
 
     @Nullable
     @ColumnInfo(name = "rawJson")
