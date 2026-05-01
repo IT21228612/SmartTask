@@ -1,8 +1,10 @@
 <resources>
     <string-array name="task_priority_options">
-        <item>@string/task_priority_low</item>
-        <item>@string/task_priority_medium</item>
+        <item>@string/task_priority_critical_now</item>
         <item>@string/task_priority_high</item>
+        <item>@string/task_priority_important</item>
+        <item>@string/task_priority_routine</item>
+        <item>@string/task_priority_low</item>
     </string-array>
 
     <string-array name="task_category_options">

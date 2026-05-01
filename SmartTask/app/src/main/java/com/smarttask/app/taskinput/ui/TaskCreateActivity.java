@@ -184,7 +184,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         locationRadiusInput.setText(task.getLocationRadius() != null ? String.valueOf(task.getLocationRadius()) : "");
         selectedDueDate = task.getDueAt();
         updateDueDateDisplay();
-        prioritySpinner.setSelection(Math.max(0, Math.min(task.getPriority(), 2)));
+        prioritySpinner.setSelection(getPrioritySpinnerPosition(task.getPriority()));
         int categoryIndex = getCategoryIndex(task.getCategory());
         categorySpinner.setSelection(categoryIndex);
         selectedPreferredStart = task.getPreferredStartTime();
@@ -385,7 +385,7 @@ public class TaskCreateActivity extends AppCompatActivity {
             return;
         }
 
-        int priority = prioritySpinner.getSelectedItemPosition();
+        int priority = 5 - prioritySpinner.getSelectedItemPosition();
         String category = categorySpinner.getSelectedItem().toString().toLowerCase(Locale.getDefault());
         Integer estimatedDuration = parseIntegerSafe(estimatedDurationText);
         Float locationRadius = parseFloatSafe(locationRadiusText);
@@ -589,6 +589,13 @@ public class TaskCreateActivity extends AppCompatActivity {
             }
         }
         return 0;
+    }
+
+    private int getPrioritySpinnerPosition(int storedPriority) {
+        if (storedPriority >= 1 && storedPriority <= 5) {
+            return 5 - storedPriority;
+        }
+        return Math.max(0, Math.min(storedPriority, 4));
     }
 
     @Nullable

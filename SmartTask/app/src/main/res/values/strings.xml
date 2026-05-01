@@ -31,9 +31,11 @@
     <string name="task_location_title">Select a location</string>
     <string name="task_location_my_location_unavailable">Could not get your current location. Showing a default place instead.</string>
     <string name="task_location_map_tap_hint">Tap the map or pick a search result to place the pin.</string>
-    <string name="task_priority_low">Low</string>
-    <string name="task_priority_medium">Medium</string>
+    <string name="task_priority_critical_now">Critical now</string>
     <string name="task_priority_high">High</string>
+    <string name="task_priority_important">Important</string>
+    <string name="task_priority_routine">Routine</string>
+    <string name="task_priority_low">Low</string>
     <string name="task_priority_value">Priority: %1$s</string>
     <string name="task_category_label">Category</string>
     <string name="task_category_work">Work</string>
