@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 import com.smarttask.app.R;
 import com.smarttask.app.contextmatching.model.TriggerCandidate;
 import com.smarttask.app.prioritization.logic.PrioritizedTask;
+import com.smarttask.app.taskinput.db.UsageStatsTracker;
 import com.smarttask.app.taskinput.ui.TaskListActivity;
 
 import java.util.List;
@@ -112,6 +113,7 @@ public class NotificationManager {
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
                 .setContentIntent(contentIntent)
+                .setDeleteIntent(buildDismissPendingIntent(taskId, notificationId))
                 .addAction(0, appContext.getString(R.string.notification_action_done),
                         buildActionPendingIntent(taskId, notificationId, ACTION_DONE, 20))
                 .addAction(0, appContext.getString(R.string.notification_action_snooze),
@@ -120,6 +122,7 @@ public class NotificationManager {
                         buildActionPendingIntent(taskId, notificationId, ACTION_POSTPONE, 40));
 
         NotificationManagerCompat.from(appContext).notify(notificationId, builder.build());
+        UsageStatsTracker.logNotificationSent(appContext, taskId, notificationId);
     }
 
     private PendingIntent buildActionPendingIntent(long taskId,
@@ -134,6 +137,19 @@ public class NotificationManager {
                 appContext,
                 buildRequestCode(taskId, actionSalt),
                 actionIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+    }
+
+    public PendingIntent buildDismissPendingIntent(long taskId, int notificationId) {
+        Intent dismissIntent = new Intent(appContext, NotificationActionReceiver.class)
+                .setAction(NotificationActionReceiver.ACTION_NOTIFICATION_DISMISSED)
+                .putExtra(EXTRA_TASK_ID, taskId)
+                .putExtra(EXTRA_NOTIFICATION_ID, notificationId);
+        return PendingIntent.getBroadcast(
+                appContext,
+                buildRequestCode(taskId, 50),
+                dismissIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
     }

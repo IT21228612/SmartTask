@@ -41,6 +41,7 @@ import com.smarttask.app.contextacquisition.api.ContextEngine;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
+import com.smarttask.app.taskinput.db.UsageStatsTracker;
 import com.smarttask.app.voiceCommandTaskCreation.OpenAiVoiceTaskParser;
 import com.smarttask.app.voiceCommandTaskCreation.ParsedVoiceTask;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLog;
@@ -713,6 +714,9 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             task.setDisplayOrder(minDisplayOrder == null ? 1L : minDisplayOrder - 1L);
         }
         taskDao.updateTask(task);
+        if (isCompleted) {
+            UsageStatsTracker.logTaskCompleted(this, task.getId());
+        }
         refreshTasks();
     }
 
@@ -740,6 +744,10 @@ public class TaskListActivity extends AppCompatActivity implements TaskAdapter.T
             }
             if (item.getItemId() == R.id.menu_item_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            }
+            if (item.getItemId() == R.id.menu_item_usage_stats) {
+                startActivity(new Intent(this, UsageStatsActivity.class));
                 return true;
             }
             return true;

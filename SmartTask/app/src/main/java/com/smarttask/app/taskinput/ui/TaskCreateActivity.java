@@ -25,6 +25,7 @@ import com.smarttask.app.contextacquisition.api.ContextEngine;
 import com.smarttask.app.taskinput.db.Task;
 import com.smarttask.app.taskinput.db.TaskDao;
 import com.smarttask.app.taskinput.db.TaskDatabase;
+import com.smarttask.app.taskinput.db.UsageStatsTracker;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -417,6 +418,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         } else {
             long newId = taskDao.insertTask(task);
             task.setId(newId);
+            UsageStatsTracker.logTaskCreated(this, newId);
         }
 
         ContextEngine.getInstance(this).syncTaskGeofences();
