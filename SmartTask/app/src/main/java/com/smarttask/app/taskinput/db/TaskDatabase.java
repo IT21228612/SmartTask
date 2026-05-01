@@ -8,10 +8,12 @@ import androidx.room.RoomDatabase;
 
 import com.smarttask.app.contextmatching.db.TaskContextMatch;
 import com.smarttask.app.contextmatching.db.TaskContextMatchDao;
+import com.smarttask.app.descriptioninsights.db.TaskDescriptionInsight;
+import com.smarttask.app.descriptioninsights.db.TaskDescriptionInsightDao;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLog;
 import com.smarttask.app.voicecommandlog.db.VoiceCommandLogDao;
 
-@Database(entities = {Task.class, TaskContextMatch.class, VoiceCommandLog.class, UsageStatEvent.class}, version = 7, exportSchema = false)
+@Database(entities = {Task.class, TaskContextMatch.class, VoiceCommandLog.class, UsageStatEvent.class, TaskDescriptionInsight.class}, version = 8, exportSchema = false)
 public abstract class TaskDatabase extends RoomDatabase {
 
     private static volatile TaskDatabase INSTANCE;
@@ -22,6 +24,7 @@ public abstract class TaskDatabase extends RoomDatabase {
 
     public abstract VoiceCommandLogDao voiceCommandLogDao();
     public abstract UsageStatDao usageStatDao();
+    public abstract TaskDescriptionInsightDao taskDescriptionInsightDao();
 
     public static TaskDatabase getInstance(Context context) {
         if (INSTANCE == null) {

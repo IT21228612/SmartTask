@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 
 import com.smarttask.app.contextacquisition.db.ContextSnapshot;
 import com.smarttask.app.contextmatching.db.TaskContextMatch;
+import com.smarttask.app.descriptioninsights.db.TaskDescriptionInsight;
 import com.smarttask.app.taskinput.db.Task;
 
 public class TaskScorer {
@@ -12,17 +13,24 @@ public class TaskScorer {
     private final ContextScoreAdapter contextScoreAdapter = new ContextScoreAdapter();
     private final InterruptionCostScorer interruptionCostScorer = new InterruptionCostScorer();
     private final ManualPriorityScorer manualPriorityScorer = new ManualPriorityScorer();
+    private final DescriptionInsightScoreAdapter descriptionInsightScoreAdapter = new DescriptionInsightScoreAdapter();
 
-    public PrioritizedTask score(Task task, @Nullable ContextSnapshot snapshot, @Nullable TaskContextMatch match, long nowMs) {
+    public PrioritizedTask score(Task task,
+                                 @Nullable ContextSnapshot snapshot,
+                                 @Nullable TaskContextMatch match,
+                                 @Nullable TaskDescriptionInsight descriptionInsight,
+                                 long nowMs) {
         float urgency = urgencyScorer.score(task, nowMs);
         float context = contextScoreAdapter.score(snapshot, match, task, nowMs);
         float interruptionPenalty = interruptionCostScorer.score(snapshot);
         float manualBoost = manualPriorityScorer.score(task);
+        float descriptionBoost = descriptionInsightScoreAdapter.scoreBoost(descriptionInsight, snapshot);
 
         float finalScore = (PriorityWeightsProvider.URGENCY_WEIGHT * urgency)
                 + (PriorityWeightsProvider.CONTEXT_WEIGHT * context)
                 - (PriorityWeightsProvider.INTERRUPTION_WEIGHT * interruptionPenalty)
-                + manualBoost;
+                + manualBoost
+                + descriptionBoost;
 
         PriorityScoreBreakdown breakdown = new PriorityScoreBreakdown(
                 urgency,
