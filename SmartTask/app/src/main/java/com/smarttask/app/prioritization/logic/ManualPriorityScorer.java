@@ -5,15 +5,21 @@ import com.smarttask.app.taskinput.db.Task;
 public class ManualPriorityScorer {
 
     public float score(Task task) {
-        float boost;
-        if (task.getPriority() >= 2) {
-            boost = 12f;
-        } else if (task.getPriority() == 1) {
-            boost = 6f;
-        } else {
-            boost = 0f;
-        }
-
+        int priority = normalizePriority(task.getPriority());
+        float boost = Math.max(0, priority - 1) * 3f;
         return Math.min(boost, 20f);
+    }
+
+    private int normalizePriority(int priority) {
+        if (priority >= 1 && priority <= 5) {
+            return priority;
+        }
+        if (priority >= 2) {
+            return 5;
+        }
+        if (priority == 1) {
+            return 4;
+        }
+        return 1;
     }
 }

@@ -134,7 +134,7 @@ public class OpenAiVoiceTaskParser {
                 + "task_title should be blank only if it is completely uncertain.otherwise make a suitable task title. it should be precise and concise, not a verbose transcript."
                 + "description should include extra details if present. description should be precise and concise, not a verbose transcript. "
                 + "category must be exactly one of Work, Study, Home, Personal; otherwise blank. "
-                + "priority must be exactly one of Low, Medium, High; otherwise blank. "
+                + "priority must be exactly one of Critical now, High, Important, Routine, Low; otherwise blank. "
                 + "due_datetime, preferred_start_datetime, preferred_end_datetime should be ISO-8601 only when clearly mentioned. "
                 + "Do not return location coordinates or location label. "
                 + "location_radius_meters only when clearly mentioned, numeric string otherwise blank. "
@@ -247,7 +247,11 @@ public class OpenAiVoiceTaskParser {
     @Nullable
     private String validatePriority(String value) {
         String normalized = normalize(value);
-        if ("Low".equals(normalized) || "Medium".equals(normalized) || "High".equals(normalized)) {
+        if ("Critical now".equalsIgnoreCase(normalized)
+                || "High".equals(normalized)
+                || "Important".equals(normalized)
+                || "Routine".equals(normalized)
+                || "Low".equals(normalized)) {
             return normalized;
         }
         return null;

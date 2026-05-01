@@ -157,16 +157,16 @@ public class ContextMatcher {
 
 
     private float scorePriority(Task task, List<String> reasons) {
-        int priority = task.getPriority();
-        if (priority >= 9 || priority == 2) {
+        int priority = normalizePriority(task.getPriority());
+        if (priority >= 5) {
             reasons.add("PRIORITY_CRITICAL");
             return 10f;
         }
-        if (priority >= 7 || priority == 1) {
+        if (priority == 4) {
             reasons.add("PRIORITY_HIGH");
             return 7f;
         }
-        if (priority >= 5 || priority == 0) {
+        if (priority == 3) {
             reasons.add("PRIORITY_MEDIUM");
             return 4f;
         }
@@ -201,11 +201,24 @@ public class ContextMatcher {
         }
 
         boolean urgentTask = task.getDueAt() != null && task.getDueAt() < nowMs;
-        if (!urgentTask && task.getPriority() < 8) {
+        if (!urgentTask && normalizePriority(task.getPriority()) < 5) {
             blockedBy.add("MEETING");
         }
         reasons.add("CALENDAR_BUSY");
         return -30f;
+    }
+
+    private int normalizePriority(int priority) {
+        if (priority >= 1 && priority <= 5) {
+            return priority;
+        }
+        if (priority >= 2) {
+            return 5;
+        }
+        if (priority == 1) {
+            return 4;
+        }
+        return 1;
     }
 
     private float scoreActivity(ContextSnapshot snapshot, Task task, long nowMs, List<String> blockedBy) {
