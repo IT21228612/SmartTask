@@ -2,6 +2,7 @@ package com.smarttask.app.descriptioninsights.logic;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,18 +30,26 @@ public class TaskDescriptionInsightAnalyzer {
     public static final String MODEL = "gpt-4.1-mini";
     private static final String RESPONSES_API_URL = "https://api.openai.com/v1/responses";
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+    private static final String TAG = "DescInsightAnalyzer";
 
     private final OkHttpClient okHttpClient = new OkHttpClient();
 
     @Nullable
     public AnalysisResult analyze(@NonNull Context context, @NonNull Task task) {
         String description = task.getDescription() == null ? "" : task.getDescription().trim();
-        if (description.isEmpty()) return null;
+        if (description.isEmpty()) {
+            Log.w(TAG, "Skipping OpenAI call: empty description for taskId=" + task.getId());
+            return null;
+        }
         String apiKey = OpenAiManifestKeyReader.getOpenAiApiKey(context);
-        if (TextUtils.isEmpty(apiKey)) return null;
+        if (TextUtils.isEmpty(apiKey)) {
+            Log.e(TAG, "Skipping OpenAI call: missing API key for taskId=" + task.getId());
+            return null;
+        }
 
         try {
             JSONObject requestJson = buildRequestJson(task);
+            Log.d(TAG, "Calling OpenAI responses API for taskId=" + task.getId() + ", model=" + MODEL);
             Request request = new Request.Builder()
                     .url(RESPONSES_API_URL)
                     .addHeader("Authorization", "Bearer " + apiKey)
@@ -49,7 +58,18 @@ public class TaskDescriptionInsightAnalyzer {
                     .build();
 
             try (Response response = okHttpClient.newCall(request).execute()) {
-                if (!response.isSuccessful() || response.body() == null) return null;
+                if (!response.isSuccessful()) {
+                    String errorBody = response.body() != null ? response.body().string() : "null";
+                    Log.e(TAG, "OpenAI call failed for taskId=" + task.getId()
+                            + ", code=" + response.code()
+                            + ", message=" + response.message()
+                            + ", body=" + errorBody);
+                    return null;
+                }
+                if (response.body() == null) {
+                    Log.e(TAG, "OpenAI call failed: empty response body for taskId=" + task.getId());
+                    return null;
+                }
                 String body = response.body().string();
                 JSONObject parsed = new JSONObject(extractStructuredJson(new JSONObject(body)));
                 AnalysisResult result = new AnalysisResult();
@@ -61,9 +81,11 @@ public class TaskDescriptionInsightAnalyzer {
                 result.rawJson = parsed.toString();
                 result.model = MODEL;
                 result.descriptionHash = sha256(description);
+                Log.d(TAG, "OpenAI analysis succeeded for taskId=" + task.getId());
                 return result;
             }
-        } catch (IOException | JSONException ignored) {
+        } catch (IOException | JSONException e) {
+            Log.e(TAG, "OpenAI analysis exception for taskId=" + task.getId(), e);
             return null;
         }
     }

@@ -6,6 +6,7 @@ import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,6 +59,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private static final int DEFAULT_LOCATION_RADIUS_METERS = 30;
     private static final int SYSTEM_DATE_PICKER_THEME = android.R.style.Theme_DeviceDefault_Dialog;
     private static final int SYSTEM_TIME_PICKER_THEME = android.R.style.Theme_DeviceDefault_Dialog;
+    private static final String TAG = "TaskCreateActivity";
 
     private TaskDao taskDao;
     private TaskDescriptionInsightDao taskDescriptionInsightDao;
@@ -420,11 +422,11 @@ public class TaskCreateActivity extends AppCompatActivity {
             task.setId(editingTaskId);
             task.setUpdatedAt(now);
             taskDao.updateTask(task);
-            upsertDescriptionInsights(task);
+            upsertDescriptionInsightsAsync(task);
         } else {
             long newId = taskDao.insertTask(task);
             task.setId(newId);
-            upsertDescriptionInsights(task);
+            upsertDescriptionInsightsAsync(task);
             UsageStatsTracker.logTaskCreated(this, newId);
         }
 
@@ -445,6 +447,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     private void upsertDescriptionInsights(Task task) {
         TaskDescriptionInsightAnalyzer.AnalysisResult result = new TaskDescriptionInsightAnalyzer().analyze(this, task);
         if (result == null) {
+            Log.w(TAG, "Description insights skipped: analyzer returned null for taskId=" + task.getId());
             return;
         }
 
@@ -462,6 +465,7 @@ public class TaskCreateActivity extends AppCompatActivity {
             insight.model = result.model;
             insight.updatedAt = now;
             taskDescriptionInsightDao.insert(insight);
+            Log.d(TAG, "Description insights inserted for taskId=" + task.getId());
         } else {
             existing.descriptionHash = result.descriptionHash;
             existing.riskIfDelayed = result.riskIfDelayed;
@@ -472,7 +476,45 @@ public class TaskCreateActivity extends AppCompatActivity {
             existing.model = result.model;
             existing.updatedAt = now;
             taskDescriptionInsightDao.update(existing);
+            Log.d(TAG, "Description insights updated for taskId=" + task.getId());
         }
+    }
+
+    private void upsertDescriptionInsightsAsync(Task task) {
+        Task taskSnapshot = copyTask(task);
+        new Thread(() -> {
+            try {
+                upsertDescriptionInsights(taskSnapshot);
+            } catch (Exception e) {
+                Log.e(TAG, "Description insights failed for taskId=" + taskSnapshot.getId(), e);
+            }
+        }, "description-insights-upsert").start();
+    }
+
+    private Task copyTask(Task source) {
+        Task copy = new Task();
+        copy.setId(source.getId());
+        copy.setTitle(source.getTitle());
+        copy.setDescription(source.getDescription());
+        copy.setCategory(source.getCategory());
+        copy.setCreatedAt(source.getCreatedAt());
+        copy.setUpdatedAt(source.getUpdatedAt());
+        copy.setDueAt(source.getDueAt());
+        copy.setPriority(source.getPriority());
+        copy.setDisplayOrder(source.getDisplayOrder());
+        copy.setLocationLat(source.getLocationLat());
+        copy.setLocationLng(source.getLocationLng());
+        copy.setLocationRadius(source.getLocationRadius());
+        copy.setLocationLabel(source.getLocationLabel());
+        copy.setEstimatedDurationMin(source.getEstimatedDurationMin());
+        copy.setPreferredStartTime(source.getPreferredStartTime());
+        copy.setPreferredEndTime(source.getPreferredEndTime());
+        copy.setNotificationsEnabled(source.isNotificationsEnabled());
+        copy.setCompleted(source.isCompleted());
+        copy.setArchived(source.isArchived());
+        copy.setSnoozeUntil(source.getSnoozeUntil());
+        copy.setCompletedAt(source.getCompletedAt());
+        return copy;
     }
 
     private void openLocationPicker() {
