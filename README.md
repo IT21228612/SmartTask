@@ -3,7 +3,7 @@
 
 SmartTask is a **privacy-first, context-aware Android to-do application** that dynamically prioritizes tasks and delivers notifications when users are most receptive. Instead of static reminders, SmartTask adapts to **location, activity, time, calendar state, and device conditions** to reduce interruption cost and improve task completion.
 
-To know more : https://smart-task-todo-app.netlify.app/
+To know more about this research project : https://smart-task-todo-app.netlify.app/
 
 ---
 
