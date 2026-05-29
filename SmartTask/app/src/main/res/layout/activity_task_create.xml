@@ -157,13 +157,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:hint="@string/task_location_label">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/task_location_label_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapWords" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/task_location_picker_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:hint="@string/task_pick_location_hint"
             app:endIconDrawable="@android:drawable/ic_menu_close_clear_cancel"
             app:endIconMode="custom"
             app:startIconDrawable="@drawable/ic_location_pin_red">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/task_location_label_input"
+                android:id="@+id/task_location_picker_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="true"
